@@ -30,7 +30,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: ${DOCKER_USERNAME}/activityforecast-backend:latest
+    image: sebin0701/activityforecast-backend:latest
     container_name: activityforecast-app
     restart: unless-stopped
     environment:
