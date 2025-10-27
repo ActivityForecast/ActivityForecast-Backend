@@ -1,23 +1,6 @@
 version: '3.8'
 
 services:
-  # Nginx 리버스 프록시
-  nginx:
-    image: nginx:alpine
-    container_name: activityforecast-nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
-      - ./ssl:/etc/nginx/ssl:ro
-      - ./logs/nginx:/var/log/nginx
-    depends_on:
-      - app
-    networks:
-      - activityforecast-network
 
   # MySQL 데이터베이스 (운영용)
   mysql:
@@ -47,7 +30,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: activityforecast-backend:latest
+    image: ${DOCKER_USERNAME}/activityforecast-backend:latest
     container_name: activityforecast-app
     restart: unless-stopped
     environment:
@@ -68,12 +51,13 @@ services:
     volumes:
       - ./logs/app:/app/logs
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/api/test/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/test/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 60s
-    # 운영 환경에서는 포트를 외부에 노출하지 않음 (Nginx를 통해서만 접근)
+    ports:
+      - "8080:8080"  # 직접 8080 포트로 접근
 
   # Redis (캐싱 및 세션 관리)
   redis:

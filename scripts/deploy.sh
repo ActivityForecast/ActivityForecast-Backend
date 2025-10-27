@@ -166,7 +166,7 @@ health_check() {
     RETRY_COUNT=0
     
     while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-        if curl -f http://localhost/api/test/health &> /dev/null; then
+        if curl -f http://localhost:8080/test/health &> /dev/null; then
             success "Application health check passed"
             return 0
         fi
