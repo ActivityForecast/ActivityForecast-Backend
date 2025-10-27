@@ -1,0 +1,66 @@
+spring:
+  application:
+    name: ActivityForecast-Backend
+  
+  profiles:
+    active: prod
+  
+  # Common configuration for all profiles
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: Asia/Seoul
+        use_sql_comments: true
+  
+  jackson:
+    time-zone: Asia/Seoul
+    date-format: yyyy-MM-dd HH:mm:ss
+  
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+# JWT Configuration
+jwt:
+  expiration: 86400000
+  refresh-expiration: 604800000
+
+# External API Configuration
+weather:
+  api:
+    url: https://api.openweathermap.org/data/2.5
+
+air-quality:
+  api:
+    url: https://api.airvisual.com/v2
+
+# CORS Configuration
+cors:
+  allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+  allowed-headers: "*"
+  allow-credentials: true
+
+# Swagger Configuration
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    try-it-out-enabled: true
+    filter: true
+  show-actuator: false
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized

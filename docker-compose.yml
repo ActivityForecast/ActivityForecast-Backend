@@ -32,7 +32,7 @@ services:
     container_name: activityforecast-app-dev
     restart: unless-stopped
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_PROFILES_ACTIVE=prod
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/activity_forecast?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
       - SPRING_DATASOURCE_USERNAME=activityuser
       - SPRING_DATASOURCE_PASSWORD=activitypassword

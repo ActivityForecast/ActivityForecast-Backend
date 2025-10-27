@@ -1,0 +1,65 @@
+spring:
+  # Server Configuration (Development)
+  server:
+    port: 8080
+    servlet:
+      context-path: /api
+
+  # Database Configuration (Development MySQL)
+  datasource:
+    url: jdbc:mysql://localhost:3306/activity_forecast?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+    username: root
+    password: 8982
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # JPA/Hibernate Configuration (Development)
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  # Security Configuration (Development)
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: your-kakao-client-id
+            client-secret: your-kakao-client-secret
+            scope: profile_nickname,account_email
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/api/auth/kakao/callback"
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
+
+# JWT Configuration (Development)
+jwt:
+  secret: activityforecast-jwt-secret-key-for-development-environment-only-change-in-production
+
+# External API Configuration (Development)
+weather:
+  api:
+    key: your-weather-api-key
+
+air-quality:
+  api:
+    key: your-air-quality-api-key
+
+# CORS Configuration (Development)
+cors:
+  allowed-origins: http://localhost:3000,http://localhost:8080
+
+# Logging Configuration (Development)
+logging:
+  level:
+    com.activityforecastbackend: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
