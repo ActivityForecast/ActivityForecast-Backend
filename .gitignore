@@ -35,3 +35,40 @@ out/
 
 ### VS Code ###
 .vscode/
+
+project_description
+CLAUDE.md
+
+# Environment files (보안 중요!)
+.env
+.env.local
+.env.prod
+.env.*.local
+
+# SSL certificates (보안 중요!)
+ssl/
+*.pem
+*.key
+*.crt
+
+# Docker override
+docker-compose.override.yml
+
+# Logs
+logs/
+*.log
+
+# Backup files
+*.bak
+*.backup
+*.sql
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*~
