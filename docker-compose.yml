@@ -52,20 +52,6 @@ services:
       retries: 3
       start_period: 60s
 
-  # Redis (캐싱용 - 선택사항)
-  redis:
-    image: redis:7-alpine
-    container_name: activityforecast-redis-dev
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    networks:
-      - activityforecast-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
 
 volumes:
   mysql_data:

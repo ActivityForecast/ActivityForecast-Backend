@@ -59,42 +59,9 @@ services:
     ports:
       - "8080:8080"  # 직접 8080 포트로 접근
 
-  # Redis (캐싱 및 세션 관리)
-  redis:
-    image: redis:7-alpine
-    container_name: activityforecast-redis
-    restart: unless-stopped
-    command: redis-server --requirepass ${REDIS_PASSWORD}
-    volumes:
-      - redis_data:/data
-    networks:
-      - activityforecast-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "--no-auth-warning", "-a", "${REDIS_PASSWORD}", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
-
-  # 로그 수집 (선택사항 - ELK Stack)
-  filebeat:
-    image: docker.elastic.co/beats/filebeat:8.5.0
-    container_name: activityforecast-filebeat
-    restart: unless-stopped
-    user: root
-    volumes:
-      - ./logs:/var/log/app:ro
-      - ./docker/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    depends_on:
-      - app
-    networks:
-      - activityforecast-network
 
 volumes:
   mysql_prod_data:
-    driver: local
-  redis_data:
     driver: local
 
 networks:
