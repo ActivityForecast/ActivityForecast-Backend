@@ -1,5 +1,5 @@
 # 멀티 스테이지 빌드를 사용하여 최종 이미지 크기 최적화
-FROM openjdk:17-jdk-slim as builder
+FROM eclipse-temurin:17-jdk-alpine as builder
 
 # 작업 디렉토리 설정
 WORKDIR /app
@@ -20,12 +20,11 @@ COPY src src
 RUN ./gradlew bootJar --no-daemon
 
 # 실행 스테이지
-FROM openjdk:17-jre-slim
+FROM eclipse-temurin:17-jre-alpine
 
-# 시스템 패키지 업데이트 및 필요한 도구 설치
-RUN apt-get update && apt-get install -y \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+# 시스템 패키지 업데이트 및 필요한 도구 설치 (Alpine용)
+RUN apk update && apk add --no-cache \
+    curl
 
 # 애플리케이션 사용자 생성 (보안상 root 사용 지양)
 RUN addgroup --system spring && adduser --system spring --ingroup spring
