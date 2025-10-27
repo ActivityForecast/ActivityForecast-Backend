@@ -181,7 +181,7 @@ jobs:
           sleep 30
           
           # Check if application is healthy
-          if curl -f http://localhost:8080/api/test/health; then
+          if curl -f http://localhost:8080/test/health; then
             echo "✅ Deployment successful - Application is healthy"
           else
             echo "❌ Deployment failed - Application health check failed"
