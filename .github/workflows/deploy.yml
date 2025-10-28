@@ -141,6 +141,9 @@ jobs:
           # Navigate to project directory
           cd /opt/activityforecast
           
+          # Safely handle local changes before pull
+          git stash push -m "Auto-stash before deployment $(date)"
+          
           # Pull latest code
           git pull origin main
           
