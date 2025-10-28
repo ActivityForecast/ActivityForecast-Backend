@@ -104,7 +104,7 @@ backup_current_deployment() {
     # Backup database
     if docker ps --format "{{.Names}}" | grep -q "${PROJECT_NAME}-mysql"; then
         log "Backing up MySQL database..."
-        docker exec "${PROJECT_NAME}-mysql" mysqldump -u root -p${MYSQL_ROOT_PASSWORD} --all-databases > "$BACKUP_PATH/database.sql"
+        docker exec "${PROJECT_NAME}-mysql" mysqldump -u root --password="${MYSQL_ROOT_PASSWORD}" --all-databases > "$BACKUP_PATH/database.sql"
         success "Database backup completed"
     fi
     
