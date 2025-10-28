@@ -3,8 +3,9 @@
 AI 기반 개인화 야외활동 추천 서비스의 백엔드 시스템입니다.
 
 ## 배포 상태
-- Production 배포: 2025-10-27 활성화
+- Production 배포: 2025-10-28 활성화
 - Docker Compose 운영 환경 적용
+- 데이터베이스 영속성 테스트 진행 중
 
 ## 주요 기능
 - Spring Boot 3.5.7 기반 REST API
