@@ -1,0 +1,69 @@
+spring:
+  # Server Configuration (Test)
+  server:
+    port: 8080
+    
+  # Database Configuration (Test - H2 In-Memory)
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password: 
+    driver-class-name: org.h2.Driver
+    
+  # JPA/Hibernate Configuration (Test)
+  jpa:
+    hibernate:
+      ddl-auto: create-drop  # 테스트 후 스키마 삭제
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+        
+  # H2 Console Configuration (Test)
+  h2:
+    console:
+      enabled: true
+      
+  # Security Configuration (Test)
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: test-kakao-client-id
+            client-secret: test-kakao-client-secret
+            scope: profile_nickname,account_email
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/auth/kakao/callback"
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
+
+# JWT Configuration (Test)
+jwt:
+  secret: test-jwt-secret-key-for-testing-environment-only
+
+# External API Configuration (Test)
+weather:
+  api:
+    key: test-weather-api-key
+
+air-quality:
+  api:
+    key: test-air-quality-api-key
+
+# CORS Configuration (Test)
+cors:
+  allowed-origins: http://localhost:3000
+
+# Logging Configuration (Test)
+logging:
+  level:
+    com.activityforecastbackend: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
