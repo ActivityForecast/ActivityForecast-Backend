@@ -16,6 +16,8 @@ services:
       - mysql_prod_data:/var/lib/mysql
       - ./docker/mysql/init:/docker-entrypoint-initdb.d
       - ./docker/mysql/conf.d:/etc/mysql/conf.d:ro
+    ports:
+      - "3306:3306"  # MySQL Workbench 연결용
     networks:
       - activityforecast-network
     healthcheck:
@@ -23,7 +25,6 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
-    # 운영 환경에서는 포트를 외부에 노출하지 않음
 
   # Spring Boot 애플리케이션 (운영용)
   app:
