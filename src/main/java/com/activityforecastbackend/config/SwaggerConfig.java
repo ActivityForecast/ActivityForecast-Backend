@@ -50,9 +50,14 @@ public class SwaggerConfig {
     private List<Server> getServerList() {
         List<Server> servers = new ArrayList<>();
         
+        // Primary: Relative URL server (automatically uses current browser protocol/host)
+        servers.add(new Server()
+                .url("/")
+                .description("Current Host (Recommended)"));
+        
         // Local development server
         servers.add(new Server()
-                .url("http://localhost:" + serverPort + "/api")
+                .url("http://localhost:" + serverPort)
                 .description("Local Development Server"));
         
         // Check if running in production
@@ -66,14 +71,14 @@ public class SwaggerConfig {
         }
         
         if (isProduction) {
-            // Production server (HTTPS)
+            // Production server (HTTP - as currently deployed)
             servers.add(new Server()
-                    .url("https://your-domain.com/api")
+                    .url("http://144.24.73.5:8080")
                     .description("Production Server"));
         } else {
             // Docker development server
             servers.add(new Server()
-                    .url("http://localhost/api")
+                    .url("http://localhost")
                     .description("Docker Development Server"));
         }
         
