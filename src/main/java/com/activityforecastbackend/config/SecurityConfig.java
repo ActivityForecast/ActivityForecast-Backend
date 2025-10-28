@@ -17,7 +17,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
@@ -87,8 +91,26 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        // WebConfig에서 설정한 CORS 설정을 사용
-        // 이렇게 하면 WebConfig의 addCorsMappings가 자동으로 적용됨
-        return request -> null;
+        CorsConfiguration configuration = new CorsConfiguration();
+        
+        // 모든 origin 허용 (개발용)
+        configuration.setAllowedOrigins(Arrays.asList("*"));
+        
+        // 모든 HTTP 메서드 허용
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
+        
+        // 모든 헤더 허용
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        
+        // 인증 정보 허용 안함 (wildcard origin 사용 시 필수)
+        configuration.setAllowCredentials(false);
+        
+        // preflight 요청 캐시 시간
+        configuration.setMaxAge(3600L);
+        
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        
+        return source;
     }
 }
