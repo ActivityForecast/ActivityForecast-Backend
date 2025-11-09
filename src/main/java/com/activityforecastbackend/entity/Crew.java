@@ -40,6 +40,9 @@ public class Crew {
     @Column(name = "invite_code", unique = true, nullable = false, length = 50)
     private String inviteCode;
 
+    @Column(name = "max_capacity", nullable = false)
+    private Integer maxCapacity; // 최대 인원 제한 필드
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;
@@ -64,13 +67,14 @@ public class Crew {
     @OneToMany(mappedBy = "crew", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CrewSchedule> crewSchedules = new ArrayList<>();
 
-    public static Crew createCrew(String crewName, String description, String colorCode, User creator) {
+    public static Crew createCrew(String crewName, String description, String colorCode, User creator, Integer maxCapacity) {
         Crew crew = new Crew();
         crew.setCrewName(crewName);
         crew.setDescription(description);
         crew.setColorCode(colorCode != null ? colorCode : "#4A90E2");
         crew.setCreatedBy(creator);
         crew.setInviteCode(generateInviteCode());
+        crew.setMaxCapacity(maxCapacity != null ? maxCapacity : 5);
         return crew;
     }
 

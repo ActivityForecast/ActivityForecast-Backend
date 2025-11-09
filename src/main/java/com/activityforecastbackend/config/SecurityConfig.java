@@ -105,6 +105,8 @@ public class SecurityConfig {
                 .requestMatchers("/recommendation/**").hasAnyRole("USER", "ADMIN")
                 .requestMatchers("/history/**").hasAnyRole("USER", "ADMIN")
                 .requestMatchers("/crew/**").hasAnyRole("USER", "ADMIN")
+                    // /api/crews/** 경로에 permitAll()을 설정하여 JWT 인증 없이 접근 허용, 테스트용
+                    .requestMatchers("/api/crews/**").permitAll()
                 
                 // All other requests need authentication
                 .anyRequest().authenticated()
@@ -116,7 +118,6 @@ public class SecurityConfig {
                 .successHandler(oAuth2AuthenticationSuccessHandler)
                 .failureHandler(oAuth2AuthenticationFailureHandler)
             );
-
         http.authenticationProvider(authenticationProvider());
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -157,22 +158,22 @@ public class SecurityConfig {
         }
         
         configuration.setAllowedOriginPatterns(originPatterns);
-        
+
         // 모든 HTTP 메서드 허용
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
-        
+
         // 모든 헤더 허용
         configuration.setAllowedHeaders(Arrays.asList("*"));
         
         // 인증 정보 허용 (JWT 사용)
         configuration.setAllowCredentials(true);
-        
+
         // preflight 요청 캐시 시간
         configuration.setMaxAge(3600L);
-        
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
-        
+
         return source;
     }
 }

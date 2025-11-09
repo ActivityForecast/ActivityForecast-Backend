@@ -9,9 +9,9 @@ spring:
 
   # Database Configuration (Production MySQL)
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://mysql:3306/activity_forecast?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul}
-    username: ${SPRING_DATASOURCE_USERNAME:activityuser}
-    password: ${SPRING_DATASOURCE_PASSWORD:activitypassword}
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/activity_forecast?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:8982}
     driver-class-name: com.mysql.cj.jdbc.Driver
     # Connection Pool Configuration
     hikari:
@@ -24,7 +24,7 @@ spring:
   # JPA/Hibernate Configuration (Production)
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     show-sql: false
     properties:
       hibernate:
