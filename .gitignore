@@ -39,6 +39,9 @@ out/
 project_description
 CLAUDE.md
 
+# Frontend test code (temporary, not for production)
+frontend-test/
+
 # Environment files (보안 중요!)
 .env
 .env.local

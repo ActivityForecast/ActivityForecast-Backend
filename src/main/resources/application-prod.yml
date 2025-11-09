@@ -48,7 +48,7 @@ spring:
             client-secret: ${KAKAO_CLIENT_SECRET:your-kakao-client-secret}
             scope: profile_nickname,account_email
             authorization-grant-type: authorization_code
-            redirect-uri: "{baseUrl}/auth/kakao/callback"
+            redirect-uri: "http://144.24.73.5:8080/login/oauth2/code/kakao"
         provider:
           kakao:
             authorization-uri: https://kauth.kakao.com/oauth/authorize
@@ -56,6 +56,10 @@ spring:
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
 
+# OAuth2 Frontend Redirect Configuration (Production)
+app:
+  oauth2:
+    authorized-redirect-uri: ${OAUTH2_AUTHORIZED_REDIRECT_URI:https://activityforecast.netlify.app/auth/oauth2/redirect}
 
   # Jackson Configuration (Production)
   jackson:
@@ -77,7 +81,7 @@ air-quality:
 
 # CORS Configuration (Production)
 cors:
-  allowed-origins: ${CORS_ALLOWED_ORIGINS:https://activityforecast.com,https://www.activityforecast.com}
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:https://activityforecast.netlify.app}
 
 # Logging Configuration (Production)
 logging:

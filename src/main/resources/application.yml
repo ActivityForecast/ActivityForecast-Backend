@@ -54,7 +54,15 @@ springdoc:
     tags-sorter: alpha
     try-it-out-enabled: true
     filter: true
+    disable-swagger-default-url: true
   show-actuator: false
+  use-management-port: false
+  writer-with-default-pretty-printer: true
+
+# OAuth2 Configuration
+app:
+  oauth2:
+    authorized-redirect-uri: ${OAUTH2_REDIRECT_URI:http://localhost:3000/auth/oauth2/redirect}
 
 # Actuator Configuration
 management:
