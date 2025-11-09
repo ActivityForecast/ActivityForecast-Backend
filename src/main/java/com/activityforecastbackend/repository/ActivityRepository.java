@@ -15,9 +15,13 @@ public interface ActivityRepository extends JpaRepository<Activity, Long> {
 
     List<Activity> findByIsDeletedFalse();
     
+    List<Activity> findAllByIsDeletedFalseOrderByActivityName();
+    
     Optional<Activity> findByActivityIdAndIsDeletedFalse(Long activityId);
     
     List<Activity> findByCategoryAndIsDeletedFalse(ActivityCategory category);
+    
+    List<Activity> findByCategoryAndIsDeletedFalseOrderByActivityName(ActivityCategory category);
     
     List<Activity> findByActivityTypeAndIsDeletedFalse(String activityType);
     
