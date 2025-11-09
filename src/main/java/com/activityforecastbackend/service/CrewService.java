@@ -30,6 +30,7 @@ public class CrewService {
     private final UserRepository userRepository;
     private final ActivityRepository activityRepository;
     private final CrewScheduleParticipantRepository participantRepository;
+    private final ActivityLocationRepository activityLocationRepository;
 
     private final EntityManager em; // EntityManager 주입
 
@@ -112,6 +113,13 @@ public class CrewService {
         Activity activity = activityRepository.findById(request.getActivityId())
                 .orElseThrow(() -> new NoSuchElementException("활동을 찾을 수 없습니다. ID: " + request.getActivityId()));
 
+        // 장소 엔티티 조회
+        ActivityLocation location = null;
+        if (request.getLocationId() != null) {
+            location = activityLocationRepository.findById(request.getLocationId())
+                    .orElseThrow(() -> new NoSuchElementException("장소를 찾을 수 없습니다. ID: " + request.getLocationId()));
+        }
+
         // 3. Schedule 엔티티 생성
         Schedule newSchedule = Schedule.createCrewSchedule(
                 creator,
@@ -119,6 +127,18 @@ public class CrewService {
                 crew,
                 request.getDate(),
                 request.getTime());
+
+        // Schedule 엔티티에 위치 정보 설정
+        if (location != null) {
+            newSchedule.setLocation(location);
+        } else if (request.getLocationAddress() != null) {
+            // 사용자 지정 위치 정보 설정 (Schedule 엔티티의 setCustomLocation 메서드를 사용한다고 가정)
+            newSchedule.setCustomLocation(
+                    request.getLocationLatitude(),
+                    request.getLocationLongitude(),
+                    request.getLocationAddress());
+        }
+
         newSchedule = scheduleRepository.save(newSchedule);
 
         // 4. CrewSchedule 엔티티 생성
