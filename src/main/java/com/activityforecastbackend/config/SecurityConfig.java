@@ -2,6 +2,8 @@ package com.activityforecastbackend.config;
 
 import com.activityforecastbackend.security.CustomUserDetailsService;
 import com.activityforecastbackend.security.JwtAuthenticationFilter;
+import com.activityforecastbackend.security.OAuth2AuthenticationFailureHandler;
+import com.activityforecastbackend.security.OAuth2AuthenticationSuccessHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,6 +22,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.context.annotation.Lazy;
 
 import java.util.Arrays;
 
@@ -31,6 +34,9 @@ public class SecurityConfig {
 
     private final CustomUserDetailsService customUserDetailsService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final @Lazy OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+    private final @Lazy OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
+    private final KakaoTokenResponseClient kakaoTokenResponseClient;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -57,18 +63,33 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // Public endpoints
-                .requestMatchers("/auth/**").permitAll()
+                // Public endpoints (API prefix)
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/oauth2/**").permitAll()
                 .requestMatchers("/health/**").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers("/test/**").permitAll()
                 
-                // Swagger endpoints
+                // Swagger endpoints (comprehensive patterns for context path support)
                 .requestMatchers("/swagger-ui/**").permitAll()
                 .requestMatchers("/v3/api-docs/**").permitAll()
                 .requestMatchers("/swagger-ui.html").permitAll()
                 .requestMatchers("/swagger-resources/**").permitAll()
                 .requestMatchers("/webjars/**").permitAll()
+                .requestMatchers("/api/swagger-ui/**").permitAll()
+                .requestMatchers("/api/v3/api-docs/**").permitAll()
+                .requestMatchers("/api/swagger-ui.html").permitAll()
+                .requestMatchers("/api/swagger-resources/**").permitAll()
+                .requestMatchers("/api/webjars/**").permitAll()
+                // Additional patterns for SpringDoc OpenAPI
+                .requestMatchers("/swagger-ui/index.html").permitAll()
+                .requestMatchers("/api/swagger-ui/index.html").permitAll()
+                .requestMatchers("/swagger-ui/swagger-ui-bundle.js").permitAll()
+                .requestMatchers("/swagger-ui/swagger-ui-standalone-preset.js").permitAll()
+                .requestMatchers("/swagger-ui/swagger-ui.css").permitAll()
+                .requestMatchers("/api/swagger-ui/swagger-ui-bundle.js").permitAll()
+                .requestMatchers("/api/swagger-ui/swagger-ui-standalone-preset.js").permitAll()
+                .requestMatchers("/api/swagger-ui/swagger-ui.css").permitAll()
                 
                 // Admin endpoints
                 .requestMatchers("/admin/**").hasRole("ADMIN")
@@ -81,6 +102,13 @@ public class SecurityConfig {
                 
                 // All other requests need authentication
                 .anyRequest().authenticated()
+            )
+            .oauth2Login(oauth2 -> oauth2
+                .tokenEndpoint(tokenEndpoint -> 
+                    tokenEndpoint.accessTokenResponseClient(kakaoTokenResponseClient)
+                )
+                .successHandler(oAuth2AuthenticationSuccessHandler)
+                .failureHandler(oAuth2AuthenticationFailureHandler)
             );
 
         http.authenticationProvider(authenticationProvider());
@@ -93,8 +121,13 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // 모든 origin 허용 (개발용)
-        configuration.setAllowedOrigins(Arrays.asList("*"));
+        // 개발 환경에서 프론트엔드 origin 명시적으로 허용
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+            "http://localhost:*",
+            "http://127.0.0.1:*"
+        ));
         
         // 모든 HTTP 메서드 허용
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
@@ -102,8 +135,8 @@ public class SecurityConfig {
         // 모든 헤더 허용
         configuration.setAllowedHeaders(Arrays.asList("*"));
         
-        // 인증 정보 허용 안함 (wildcard origin 사용 시 필수)
-        configuration.setAllowCredentials(false);
+        // 인증 정보 허용 (JWT 사용)
+        configuration.setAllowCredentials(true);
         
         // preflight 요청 캐시 시간
         configuration.setMaxAge(3600L);
