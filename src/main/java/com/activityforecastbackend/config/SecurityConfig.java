@@ -23,8 +23,11 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -37,6 +40,9 @@ public class SecurityConfig {
     private final @Lazy OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
     private final @Lazy OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
     private final KakaoTokenResponseClient kakaoTokenResponseClient;
+    
+    @Value("${cors.allowed-origins:https://activityforecast.netlify.app}")
+    private String allowedOrigins;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -121,13 +127,36 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // 개발 환경에서 프론트엔드 origin 명시적으로 허용
-        configuration.setAllowedOriginPatterns(Arrays.asList(
+        // 허용할 Origin 패턴을 동적으로 구성
+        List<String> originPatterns = new ArrayList<>();
+        
+        // 개발 환경 origins (항상 포함)
+        originPatterns.addAll(Arrays.asList(
             "http://localhost:3000",
             "http://127.0.0.1:3000",
-            "http://localhost:*",
-            "http://127.0.0.1:*"
+            "http://localhost:*", 
+            "http://127.0.0.1:*",
+            "https://activityforecast.netlify.app"  // 운영용 Netlify 주소 명시적 포함
         ));
+        
+        // 운영 환경 origins (환경변수에서)
+        if (allowedOrigins != null && !allowedOrigins.trim().isEmpty()) {
+            String[] origins = allowedOrigins.split(",");
+            for (String origin : origins) {
+                String trimmedOrigin = origin.trim();
+                if (!trimmedOrigin.isEmpty() && !originPatterns.contains(trimmedOrigin)) {
+                    originPatterns.add(trimmedOrigin);
+                }
+            }
+        }
+        
+        // 직접 Netlify 주소도 추가 (백업용)
+        String netlifyUrl = "https://activityforecast.netlify.app";
+        if (!originPatterns.contains(netlifyUrl)) {
+            originPatterns.add(netlifyUrl);
+        }
+        
+        configuration.setAllowedOriginPatterns(originPatterns);
         
         // 모든 HTTP 메서드 허용
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
