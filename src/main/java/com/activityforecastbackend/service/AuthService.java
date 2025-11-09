@@ -4,9 +4,13 @@ import com.activityforecastbackend.dto.auth.JwtAuthenticationResponse;
 import com.activityforecastbackend.dto.auth.LoginRequest;
 import com.activityforecastbackend.dto.auth.SignupRequest;
 import com.activityforecastbackend.dto.auth.UserSummary;
+import com.activityforecastbackend.entity.Activity;
 import com.activityforecastbackend.entity.User;
+import com.activityforecastbackend.entity.UserPreference;
 import com.activityforecastbackend.exception.BadRequestException;
 import com.activityforecastbackend.exception.ResourceNotFoundException;
+import com.activityforecastbackend.repository.ActivityRepository;
+import com.activityforecastbackend.repository.UserPreferenceRepository;
 import com.activityforecastbackend.repository.UserRepository;
 import com.activityforecastbackend.security.JwtTokenProvider;
 import com.activityforecastbackend.security.UserPrincipal;
@@ -27,6 +31,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final ActivityRepository activityRepository;
+    private final UserPreferenceRepository userPreferenceRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
@@ -89,6 +95,29 @@ public class AuthService {
         );
 
         User savedUser = userRepository.save(user);
+
+        // 선호 활동 저장
+        if (signupRequest.getPreferredActivityIds() != null && !signupRequest.getPreferredActivityIds().isEmpty()) {
+            log.info("Saving {} preferred activities for user: {}", 
+                    signupRequest.getPreferredActivityIds().size(), savedUser.getEmail());
+            
+            for (Long activityId : signupRequest.getPreferredActivityIds()) {
+                try {
+                    Activity activity = activityRepository.findById(activityId)
+                            .orElseThrow(() -> new BadRequestException("Activity not found with id: " + activityId));
+                    
+                    UserPreference preference = UserPreference.builder()
+                            .user(savedUser)
+                            .activity(activity)
+                            .build();
+                    
+                    userPreferenceRepository.save(preference);
+                    log.debug("Saved preference for activity: {} ({})", activity.getActivityName(), activityId);
+                } catch (Exception e) {
+                    log.warn("Failed to save preference for activity ID {}: {}", activityId, e.getMessage());
+                }
+            }
+        }
 
         // 자동 로그인 처리
         Authentication authentication = new UsernamePasswordAuthenticationToken(
