@@ -2,8 +2,9 @@ spring:
   # Server Configuration (Development)
   server:
     port: 8080
-    servlet:
-      context-path: /api
+    # Context path 임시 제거 - Swagger UI 작동을 위해
+    # servlet:
+    #   context-path: /api
 
   # Database Configuration (Development MySQL)
   datasource:
@@ -31,7 +32,7 @@ spring:
             client-secret: your-kakao-client-secret
             scope: profile_nickname,account_email
             authorization-grant-type: authorization_code
-            redirect-uri: "{baseUrl}/api/auth/kakao/callback"
+            redirect-uri: "http://localhost:8080/login/oauth2/code/kakao"
         provider:
           kakao:
             authorization-uri: https://kauth.kakao.com/oauth/authorize
