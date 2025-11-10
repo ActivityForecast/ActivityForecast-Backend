@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -36,6 +37,10 @@ public class UserPreference {
     @JoinColumn(name = "activity_id", nullable = false)
     private Activity activity;
 
+    @Builder.Default
+    @Column(name = "weight", nullable = false, precision = 3, scale = 2)
+    private BigDecimal weight = BigDecimal.valueOf(0.5);
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -44,6 +49,15 @@ public class UserPreference {
         UserPreference preference = new UserPreference();
         preference.setUser(user);
         preference.setActivity(activity);
+        preference.setWeight(BigDecimal.valueOf(0.5));
+        return preference;
+    }
+    
+    public static UserPreference createPreference(User user, Activity activity, BigDecimal weight) {
+        UserPreference preference = new UserPreference();
+        preference.setUser(user);
+        preference.setActivity(activity);
+        preference.setWeight(weight != null ? weight : BigDecimal.valueOf(0.5));
         return preference;
     }
 }
