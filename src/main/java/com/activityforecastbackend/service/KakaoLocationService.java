@@ -64,7 +64,7 @@ public class KakaoLocationService {
         }
         
         // 초기화 상태 로깅
-        log.info("=== 카카오 API 설정 초기화 완료 ===");
+        log.info("=== 카카오 API 설정 초기화 완료 (CI/CD 테스트) ===");
         log.info("API 키 상태: {}", kakaoApiKey != null && !kakaoApiKey.isEmpty() ? "설정됨" : "미설정");
         log.info("API 키 소스: {}", environment.getProperty("kakao.api.key") != null ? "Spring 프로퍼티" : "환경변수");
         log.info("Origin: {}", kakaoOrigin);
