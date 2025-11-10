@@ -106,8 +106,8 @@ public class SecurityConfig {
                         .requestMatchers("/history/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/crew/**").hasAnyRole("USER", "ADMIN")
 
-                        // /api/crews/** 경로에 permitAll()을 설정하여 JWT 인증 없이 접근 허용, 테스트용
-                        .requestMatchers("/api/crews/**").permitAll()
+                        // 크루 API 인증 설정 - USER 또는 ADMIN 권한 필요
+                        .requestMatchers("/api/crews/**").hasAnyRole("USER", "ADMIN")
 
                         // All other requests need authentication
                         .anyRequest().authenticated()
