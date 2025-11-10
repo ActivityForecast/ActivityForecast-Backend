@@ -61,7 +61,7 @@ app:
   oauth2:
     authorized-redirect-uri: ${OAUTH2_AUTHORIZED_REDIRECT_URI:https://activityforecast.netlify.app/auth/oauth2/redirect}
 
-  # Jackson Configuration (Production)
+  # Jackson Configuration(Production)
   jackson:
     serialization:
       write-dates-as-timestamps: false
