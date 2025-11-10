@@ -4,9 +4,12 @@ import com.activityforecastbackend.dto.activity.*;
 import com.activityforecastbackend.exception.BadRequestException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.env.Environment;
+import jakarta.annotation.PostConstruct;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -27,14 +30,55 @@ import java.util.Map;
 public class KakaoLocationService {
 
     private final RestTemplate restTemplate;
-
-    @Value("${kakao.api.key}")
+    
+    @Autowired
+    private Environment environment;
+    
     private String kakaoApiKey;
-
-    @Value("${kakao.api.origin}")
     private String kakaoOrigin;
 
     private static final String KAKAO_API_BASE_URL = "https://dapi.kakao.com/v2/local";
+    
+    /**
+     * 애플리케이션 시작 시 카카오 API 설정 초기화
+     * 로컬 환경: Spring 프로퍼티 우선 사용
+     * 운영 환경: 환경변수 직접 접근으로 폴백
+     */
+    @PostConstruct
+    public void initializeKakaoApiSettings() {
+        // 1순위: Spring 프로퍼티에서 로드 (로컬 환경)
+        kakaoApiKey = environment.getProperty("kakao.api.key");
+        kakaoOrigin = environment.getProperty("kakao.api.origin");
+        
+        // 2순위: 환경변수에서 직접 로드 (운영 환경 폴백)
+        if (kakaoApiKey == null || kakaoApiKey.isEmpty()) {
+            kakaoApiKey = System.getenv("KAKAO_API_KEY");
+            log.info("Spring 프로퍼티에서 API 키 로드 실패, 환경변수에서 로드 시도");
+        }
+        
+        if (kakaoOrigin == null || kakaoOrigin.isEmpty()) {
+            kakaoOrigin = System.getenv("KAKAO_API_ORIGIN");
+            if (kakaoOrigin == null || kakaoOrigin.isEmpty()) {
+                kakaoOrigin = "localhost"; // 기본값
+            }
+        }
+        
+        // 초기화 상태 로깅
+        log.info("=== 카카오 API 설정 초기화 완료 ===");
+        log.info("API 키 상태: {}", kakaoApiKey != null && !kakaoApiKey.isEmpty() ? "설정됨" : "미설정");
+        log.info("API 키 소스: {}", environment.getProperty("kakao.api.key") != null ? "Spring 프로퍼티" : "환경변수");
+        log.info("Origin: {}", kakaoOrigin);
+        log.info("현재 프로파일: {}", String.join(",", environment.getActiveProfiles()));
+        
+        if (kakaoApiKey != null && !kakaoApiKey.isEmpty()) {
+            log.info("API 키 앞 4자리: {}***", kakaoApiKey.substring(0, Math.min(4, kakaoApiKey.length())));
+        } else {
+            log.warn("❌ 카카오 API 키가 설정되지 않았습니다!");
+            log.warn("  - Spring 프로퍼티: kakao.api.key = {}", environment.getProperty("kakao.api.key"));
+            log.warn("  - 환경변수: KAKAO_API_KEY = {}", System.getenv("KAKAO_API_KEY"));
+        }
+        log.info("======================================");
+    }
 
     /**
      * 활동별 카카오 카테고리 매핑
@@ -58,6 +102,12 @@ public class KakaoLocationService {
     public List<KakaoPlaceDto> searchPlacesByKeyword(String keyword, BigDecimal latitude, BigDecimal longitude, Integer radius) {
         log.info("Searching places by keyword: {} at ({}, {}) within {}m",
                 keyword, latitude, longitude, radius);
+        
+        // API 키 유효성 검사
+        if (!isApiKeyValid()) {
+            log.error("❌ 카카오 API 키가 설정되지 않았습니다.");
+            return Collections.emptyList();
+        }
 
         try {
             URI uri = UriComponentsBuilder.fromUriString(KAKAO_API_BASE_URL + "/search/keyword.json")
@@ -97,6 +147,12 @@ public class KakaoLocationService {
     public List<KakaoPlaceDto> searchPlacesByCategory(String categoryCode, BigDecimal latitude, BigDecimal longitude, Integer radius) {
         log.info("Searching places by category: {} at ({}, {}) within {}m",
                 categoryCode, latitude, longitude, radius);
+        
+        // API 키 유효성 검사
+        if (!isApiKeyValid()) {
+            log.error("❌ 카카오 API 키가 설정되지 않았습니다.");
+            return Collections.emptyList();
+        }
 
         try {
             URI uri = UriComponentsBuilder.fromUriString(KAKAO_API_BASE_URL + "/search/category.json")
@@ -154,6 +210,13 @@ public class KakaoLocationService {
      */
     public CoordinateDto geocodeAddress(String address) {
         log.info("Geocoding address: {}", address);
+        
+        // API 키 유효성 검사 먼저 수행
+        if (!isApiKeyValid()) {
+            log.error("❌ 카카오 API 키가 설정되지 않았거나 유효하지 않습니다. 현재 키: [{}]", 
+                    kakaoApiKey == null ? "null" : (kakaoApiKey.isEmpty() ? "empty" : "***"));
+            throw new BadRequestException("카카오 API 키가 설정되지 않았습니다. 관리자에게 문의하세요.");
+        }
 
         URI uri = null;
         try {
@@ -232,6 +295,13 @@ public class KakaoLocationService {
      */
     public CoordinateDto reverseGeocode(BigDecimal latitude, BigDecimal longitude) {
         log.info("Reverse geocoding coordinates: ({}, {})", latitude, longitude);
+        
+        // API 키 유효성 검사
+        if (!isApiKeyValid()) {
+            log.error("❌ 카카오 API 키가 설정되지 않았거나 유효하지 않습니다. 현재 키: [{}]", 
+                    kakaoApiKey == null ? "null" : (kakaoApiKey.isEmpty() ? "empty" : "***"));
+            throw new BadRequestException("카카오 API 키가 설정되지 않았습니다. 관리자에게 문의하세요.");
+        }
 
         try {
             URI uri = UriComponentsBuilder.fromUriString(KAKAO_API_BASE_URL + "/geo/coord2address.json")
@@ -312,7 +382,10 @@ public class KakaoLocationService {
     @EventListener(ApplicationReadyEvent.class)
     public void testKakaoApiKey() {
         if (!isApiKeyValid()) {
-            log.warn("❌ 카카오 API 키가 설정되지 않았습니다. 외부 장소 검색 기능이 제한됩니다.");
+            log.error("❌ 카카오 API 키가 설정되지 않았습니다!");
+            log.error("   현재 설정값: [{}]", kakaoApiKey == null ? "null" : (kakaoApiKey.isEmpty() ? "empty" : "***"));
+            log.error("   환경변수 KAKAO_API_KEY를 설정하거나 application-prod.yml에서 직접 설정하세요.");
+            log.error("   외부 장소 검색 기능이 제한됩니다.");
             return;
         }
 
