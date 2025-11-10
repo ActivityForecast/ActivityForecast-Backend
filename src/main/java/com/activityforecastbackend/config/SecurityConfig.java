@@ -100,6 +100,9 @@ public class SecurityConfig {
                 // 사용자 프로필 및 선호도 API
                 .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")
                 
+                // 크루 API 인증 설정 - USER 또는 ADMIN 권한 필요
+                .requestMatchers("/api/crews/**").hasAnyRole("USER", "ADMIN")
+                
                 // Admin endpoints
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 
