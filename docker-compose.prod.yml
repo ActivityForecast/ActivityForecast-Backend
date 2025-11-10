@@ -44,8 +44,8 @@ services:
       - AIR_QUALITY_API_KEY=${AIR_QUALITY_API_KEY}
       - KAKAO_CLIENT_ID=${KAKAO_CLIENT_ID}
       - KAKAO_CLIENT_SECRET=${KAKAO_CLIENT_SECRET}
-      - KAKAO_API_KEY=b08c4a9f29f7a9a9c432ba93b59f6ad5
-      - KAKAO_API_ORIGIN=144.24.73.5
+      - KAKAO_API_KEY=${KAKAO_API_KEY}
+      - KAKAO_API_ORIGIN=${KAKAO_API_ORIGIN}
     depends_on:
       mysql:
         condition: service_healthy
