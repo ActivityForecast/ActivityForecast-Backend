@@ -82,7 +82,7 @@ air-quality:
 kakao:
   api:
     key: ${KAKAO_API_KEY:}  # 환경변수에서 로드, 기본값 없음 (보안 강화)
-    origin: ${KAKAO_API_ORIGIN:activityforecast}  # 운영 환경 origin
+    origin: ${KAKAO_API_ORIGIN}  # 운영 환경 origin
 
 # CORS Configuration (Production)
 cors:

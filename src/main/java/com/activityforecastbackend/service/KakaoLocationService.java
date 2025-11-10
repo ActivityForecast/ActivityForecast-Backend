@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
-import jakarta.annotation.PostConstruct;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -28,60 +27,38 @@ import java.util.Map;
 public class KakaoLocationService {
 
     private final RestTemplate restTemplate;
-    
+
+    @Value("${kakao.api.key}")
     private String kakaoApiKey;
+
+    @Value("${kakao.api.origin}")
     private String kakaoOrigin;
-    
-    /**
-     * 환경변수에서 직접 카카오 API 설정 로드
-     */
-    @PostConstruct
-    public void initKakaoApiSettings() {
-        // 1순위: 환경변수에서 직접 로드
-        kakaoApiKey = System.getenv("KAKAO_API_KEY");
-        kakaoOrigin = System.getenv("KAKAO_API_ORIGIN");
-        
-        // 2순위: 기본값 설정
-        if (kakaoOrigin == null || kakaoOrigin.isEmpty()) {
-            kakaoOrigin = "localhost";
-        }
-        
-        log.info("카카오 API 설정 초기화 완료:");
-        log.info("  - API 키 상태: {}", kakaoApiKey != null && !kakaoApiKey.isEmpty() ? "설정됨" : "미설정");
-        log.info("  - Origin: {}", kakaoOrigin);
-    }
-    
+
     private static final String KAKAO_API_BASE_URL = "https://dapi.kakao.com/v2/local";
-    
+
     /**
      * 활동별 카카오 카테고리 매핑
      */
     private static final Map<String, String> ACTIVITY_CATEGORY_MAP = Map.of(
-        "축구", "SW8",      // 스포츠,레저 > 스포츠시설
-        "농구", "SW8",
-        "야구", "SW8", 
-        "배구", "SW8",
-        "테니스", "SW8",
-        "볼링", "SW8",
-        "헬스", "SW8",
-        "수영", "SW8",
-        "골프", "SW8",
-        "스키", "SW8"
+            "축구", "SW8",      // 스포츠,레저 > 스포츠시설
+            "농구", "SW8",
+            "야구", "SW8",
+            "배구", "SW8",
+            "테니스", "SW8",
+            "볼링", "SW8",
+            "헬스", "SW8",
+            "수영", "SW8",
+            "골프", "SW8",
+            "스키", "SW8"
     );
 
     /**
      * 키워드로 장소 검색
      */
     public List<KakaoPlaceDto> searchPlacesByKeyword(String keyword, BigDecimal latitude, BigDecimal longitude, Integer radius) {
-        log.info("Searching places by keyword: {} at ({}, {}) within {}m", 
+        log.info("Searching places by keyword: {} at ({}, {}) within {}m",
                 keyword, latitude, longitude, radius);
-        
-        // API 키 유효성 검사
-        if (!isApiKeyValid()) {
-            log.error("❌ 카카오 API 키가 설정되지 않았습니다.");
-            return Collections.emptyList();
-        }
-        
+
         try {
             URI uri = UriComponentsBuilder.fromUriString(KAKAO_API_BASE_URL + "/search/keyword.json")
                     .queryParam("query", keyword)
@@ -94,20 +71,20 @@ public class KakaoLocationService {
                     .build()
                     .encode()
                     .toUri();
-            
+
             HttpEntity<?> entity = new HttpEntity<>(createKakaoHeaders());
-            
+
             ResponseEntity<KakaoSearchResponse> response = restTemplate.exchange(
                     uri, HttpMethod.GET, entity, KakaoSearchResponse.class);
-            
+
             if (response.getBody() != null && response.getBody().getDocuments() != null) {
-                log.info("Found {} places for keyword: {}", 
+                log.info("Found {} places for keyword: {}",
                         response.getBody().getDocuments().size(), keyword);
                 return response.getBody().getDocuments();
             }
-            
+
             return Collections.emptyList();
-            
+
         } catch (Exception e) {
             log.error("Error searching places by keyword: {}", e.getMessage(), e);
             throw new BadRequestException("장소 검색 중 오류가 발생했습니다: " + e.getMessage());
@@ -118,15 +95,9 @@ public class KakaoLocationService {
      * 카테고리로 장소 검색
      */
     public List<KakaoPlaceDto> searchPlacesByCategory(String categoryCode, BigDecimal latitude, BigDecimal longitude, Integer radius) {
-        log.info("Searching places by category: {} at ({}, {}) within {}m", 
+        log.info("Searching places by category: {} at ({}, {}) within {}m",
                 categoryCode, latitude, longitude, radius);
-        
-        // API 키 유효성 검사
-        if (!isApiKeyValid()) {
-            log.error("❌ 카카오 API 키가 설정되지 않았습니다.");
-            return Collections.emptyList();
-        }
-        
+
         try {
             URI uri = UriComponentsBuilder.fromUriString(KAKAO_API_BASE_URL + "/search/category.json")
                     .queryParam("category_group_code", categoryCode)
@@ -139,20 +110,20 @@ public class KakaoLocationService {
                     .build()
                     .encode()
                     .toUri();
-            
+
             HttpEntity<?> entity = new HttpEntity<>(createKakaoHeaders());
-            
+
             ResponseEntity<KakaoSearchResponse> response = restTemplate.exchange(
                     uri, HttpMethod.GET, entity, KakaoSearchResponse.class);
-            
+
             if (response.getBody() != null && response.getBody().getDocuments() != null) {
-                log.info("Found {} places for category: {}", 
+                log.info("Found {} places for category: {}",
                         response.getBody().getDocuments().size(), categoryCode);
                 return response.getBody().getDocuments();
             }
-            
+
             return Collections.emptyList();
-            
+
         } catch (Exception e) {
             log.error("Error searching places by category: {}", e.getMessage(), e);
             throw new BadRequestException("카테고리 장소 검색 중 오류가 발생했습니다: " + e.getMessage());
@@ -164,7 +135,7 @@ public class KakaoLocationService {
      */
     public List<KakaoPlaceDto> searchPlacesByActivity(String activityName, BigDecimal latitude, BigDecimal longitude, Integer radius) {
         log.info("Searching places for activity: {}", activityName);
-        
+
         // 1. 카테고리 매핑이 있으면 카테고리로 검색
         String categoryCode = ACTIVITY_CATEGORY_MAP.get(activityName);
         if (categoryCode != null) {
@@ -173,7 +144,7 @@ public class KakaoLocationService {
                 return categoryResults;
             }
         }
-        
+
         // 2. 카테고리 검색 결과가 없으면 키워드로 검색
         return searchPlacesByKeyword(activityName, latitude, longitude, radius);
     }
@@ -183,14 +154,7 @@ public class KakaoLocationService {
      */
     public CoordinateDto geocodeAddress(String address) {
         log.info("Geocoding address: {}", address);
-        
-        // API 키 유효성 검사 먼저 수행
-        if (!isApiKeyValid()) {
-            log.error("❌ 카카오 API 키가 설정되지 않았거나 유효하지 않습니다. 현재 키: [{}]", 
-                    kakaoApiKey == null ? "null" : (kakaoApiKey.isEmpty() ? "empty" : "***"));
-            throw new BadRequestException("카카오 API 키가 설정되지 않았습니다. 관리자에게 문의하세요.");
-        }
-        
+
         URI uri = null;
         try {
             uri = UriComponentsBuilder.fromUriString(KAKAO_API_BASE_URL + "/search/address.json")
@@ -200,9 +164,9 @@ public class KakaoLocationService {
                     .build()
                     .encode()
                     .toUri();
-            
+
             ResponseEntity<KakaoSearchResponse> response = null;
-            
+
             // 1차 시도: KA 헤더 포함
             try {
                 HttpEntity<?> entity = new HttpEntity<>(createKakaoHeaders());
@@ -217,13 +181,13 @@ public class KakaoLocationService {
                     throw e;
                 }
             }
-            
-            if (response.getBody() != null && 
-                response.getBody().getDocuments() != null && 
-                !response.getBody().getDocuments().isEmpty()) {
-                
+
+            if (response.getBody() != null &&
+                    response.getBody().getDocuments() != null &&
+                    !response.getBody().getDocuments().isEmpty()) {
+
                 KakaoPlaceDto place = response.getBody().getDocuments().get(0);
-                
+
                 return CoordinateDto.builder()
                         .latitude(place.getLatitude())
                         .longitude(place.getLongitude())
@@ -231,12 +195,12 @@ public class KakaoLocationService {
                         .roadAddress(place.getRoadAddressName())
                         .build();
             }
-            
+
             // 주소 검색 실패 시 키워드 검색으로 fallback (역명 등을 위해)
             log.info("주소 검색 실패, 키워드 검색으로 재시도: {}", address);
             List<KakaoPlaceDto> keywordResults = searchPlacesByKeyword(
                     address, new BigDecimal("37.5665"), new BigDecimal("126.9780"), 20000);
-            
+
             if (!keywordResults.isEmpty()) {
                 KakaoPlaceDto place = keywordResults.get(0);
                 return CoordinateDto.builder()
@@ -246,19 +210,19 @@ public class KakaoLocationService {
                         .roadAddress(place.getRoadAddressName())
                         .build();
             }
-            
+
             throw new BadRequestException("해당 주소 또는 장소를 찾을 수 없습니다: " + address);
-            
+
         } catch (Exception e) {
-            log.error("Error geocoding address: {} | Request URI: {} | Error: {}", 
+            log.error("Error geocoding address: {} | Request URI: {} | Error: {}",
                     address, uri != null ? uri.toString() : "URI not built", e.getMessage(), e);
-            
+
             // HTTP 에러인 경우 상세 정보 추가
             if (e.getMessage().contains("400")) {
-                log.error("카카오 API 400 오류: API 키 또는 요청 형식을 확인해주세요. API Key 유효성: {}", 
+                log.error("카카오 API 400 오류: API 키 또는 요청 형식을 확인해주세요. API Key 유효성: {}",
                         isApiKeyValid());
             }
-            
+
             throw new BadRequestException("주소 변환 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
@@ -268,14 +232,7 @@ public class KakaoLocationService {
      */
     public CoordinateDto reverseGeocode(BigDecimal latitude, BigDecimal longitude) {
         log.info("Reverse geocoding coordinates: ({}, {})", latitude, longitude);
-        
-        // API 키 유효성 검사
-        if (!isApiKeyValid()) {
-            log.error("❌ 카카오 API 키가 설정되지 않았거나 유효하지 않습니다. 현재 키: [{}]", 
-                    kakaoApiKey == null ? "null" : (kakaoApiKey.isEmpty() ? "empty" : "***"));
-            throw new BadRequestException("카카오 API 키가 설정되지 않았습니다. 관리자에게 문의하세요.");
-        }
-        
+
         try {
             URI uri = UriComponentsBuilder.fromUriString(KAKAO_API_BASE_URL + "/geo/coord2address.json")
                     .queryParam("x", longitude)
@@ -284,22 +241,22 @@ public class KakaoLocationService {
                     .build()
                     .encode()
                     .toUri();
-            
+
             HttpEntity<?> entity = new HttpEntity<>(createKakaoHeaders());
-            
+
             // 역지오코딩은 다른 응답 형식이므로 직접 Map으로 처리
             ResponseEntity<Map> response = restTemplate.exchange(
                     uri, HttpMethod.GET, entity, Map.class);
-            
+
             if (response.getBody() != null) {
                 Map<String, Object> body = response.getBody();
                 List<Map<String, Object>> documents = (List<Map<String, Object>>) body.get("documents");
-                
+
                 if (documents != null && !documents.isEmpty()) {
                     Map<String, Object> document = documents.get(0);
                     Map<String, Object> address = (Map<String, Object>) document.get("address");
                     Map<String, Object> roadAddress = (Map<String, Object>) document.get("road_address");
-                    
+
                     return CoordinateDto.builder()
                             .latitude(latitude)
                             .longitude(longitude)
@@ -308,9 +265,9 @@ public class KakaoLocationService {
                             .build();
                 }
             }
-            
+
             throw new BadRequestException("해당 좌표의 주소를 찾을 수 없습니다");
-            
+
         } catch (Exception e) {
             log.error("Error reverse geocoding: {}", e.getMessage(), e);
             throw new BadRequestException("좌표 변환 중 오류가 발생했습니다: " + e.getMessage());
@@ -327,7 +284,7 @@ public class KakaoLocationService {
         headers.set("User-Agent", "ActivityForecast/1.0");
         return headers;
     }
-    
+
     /**
      * 대체 헤더 (KA 없이) 생성
      */
@@ -343,27 +300,24 @@ public class KakaoLocationService {
      * 카카오 API 키 유효성 검사
      */
     public boolean isApiKeyValid() {
-        return kakaoApiKey != null && 
-               !kakaoApiKey.isEmpty() && 
-               !kakaoApiKey.equals("your-kakao-api-key") &&
-               !kakaoApiKey.equals("your-rest-api-key-here");
+        return kakaoApiKey != null &&
+                !kakaoApiKey.isEmpty() &&
+                !kakaoApiKey.equals("your-kakao-api-key") &&
+                !kakaoApiKey.equals("your-rest-api-key-here");
     }
-    
+
     /**
      * 애플리케이션 시작 시 카카오 API 키 테스트
      */
     @EventListener(ApplicationReadyEvent.class)
     public void testKakaoApiKey() {
         if (!isApiKeyValid()) {
-            log.error("❌ 카카오 API 키가 설정되지 않았습니다!");
-            log.error("   현재 설정값: [{}]", kakaoApiKey == null ? "null" : (kakaoApiKey.isEmpty() ? "empty" : "***"));
-            log.error("   환경변수 KAKAO_API_KEY를 설정하거나 application-prod.yml에서 직접 설정하세요.");
-            log.error("   외부 장소 검색 기능이 제한됩니다.");
+            log.warn("❌ 카카오 API 키가 설정되지 않았습니다. 외부 장소 검색 기능이 제한됩니다.");
             return;
         }
-        
+
         log.info("🔧 카카오 API 설정 - Origin: {}", kakaoOrigin);
-        
+
         URI testUri = UriComponentsBuilder.fromUriString(KAKAO_API_BASE_URL + "/search/keyword.json")
                 .queryParam("query", "카페")
                 .queryParam("x", "127.027926")
@@ -372,33 +326,33 @@ public class KakaoLocationService {
                 .build()
                 .encode()
                 .toUri();
-        
+
         // 1차 시도: KA 헤더 포함
         try {
             HttpEntity<?> entity = new HttpEntity<>(createKakaoHeaders());
             ResponseEntity<String> response = restTemplate.exchange(
                     testUri, HttpMethod.GET, entity, String.class);
-            
+
             if (response.getStatusCode().is2xxSuccessful()) {
                 log.info("✅ 카카오 API 키가 정상적으로 설정되었습니다. (KA 헤더 방식)");
                 return;
             }
-            
+
         } catch (Exception e) {
             log.warn("⚠️ KA 헤더 방식 실패: {}", e.getMessage());
         }
-        
+
         // 2차 시도: KA 헤더 없이
         try {
             HttpEntity<?> entity = new HttpEntity<>(createAlternativeHeaders());
             ResponseEntity<String> response = restTemplate.exchange(
                     testUri, HttpMethod.GET, entity, String.class);
-            
+
             if (response.getStatusCode().is2xxSuccessful()) {
                 log.info("✅ 카카오 API 키가 정상적으로 설정되었습니다. (대체 헤더 방식)");
                 return;
             }
-            
+
         } catch (Exception e) {
             log.error("❌ 카카오 API 키 테스트 중 오류 발생: {}", e.getMessage());
             log.error("   - API 키를 카카오 개발자 콘솔에서 확인해주세요.");
