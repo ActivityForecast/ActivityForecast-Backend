@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import jakarta.annotation.PostConstruct;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -28,11 +29,27 @@ public class KakaoLocationService {
 
     private final RestTemplate restTemplate;
     
-    @Value("${kakao.api.key:}")
     private String kakaoApiKey;
-    
-    @Value("${kakao.api.origin:localhost}")
     private String kakaoOrigin;
+    
+    /**
+     * 환경변수에서 직접 카카오 API 설정 로드
+     */
+    @PostConstruct
+    public void initKakaoApiSettings() {
+        // 1순위: 환경변수에서 직접 로드
+        kakaoApiKey = System.getenv("KAKAO_API_KEY");
+        kakaoOrigin = System.getenv("KAKAO_API_ORIGIN");
+        
+        // 2순위: 기본값 설정
+        if (kakaoOrigin == null || kakaoOrigin.isEmpty()) {
+            kakaoOrigin = "localhost";
+        }
+        
+        log.info("카카오 API 설정 초기화 완료:");
+        log.info("  - API 키 상태: {}", kakaoApiKey != null && !kakaoApiKey.isEmpty() ? "설정됨" : "미설정");
+        log.info("  - Origin: {}", kakaoOrigin);
+    }
     
     private static final String KAKAO_API_BASE_URL = "https://dapi.kakao.com/v2/local";
     
