@@ -45,7 +45,7 @@ services:
       - KAKAO_CLIENT_ID=${KAKAO_CLIENT_ID}
       - KAKAO_CLIENT_SECRET=${KAKAO_CLIENT_SECRET}
       - KAKAO_API_KEY=${KAKAO_API_KEY}
-      - KAKAO_API_ORIGIN=${KAKAO_API_ORIGIN:-activityforecast}
+      - KAKAO_API_ORIGIN=${KAKAO_API_ORIGIN}
     depends_on:
       mysql:
         condition: service_healthy
