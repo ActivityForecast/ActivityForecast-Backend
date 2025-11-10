@@ -28,7 +28,7 @@ public class KakaoLocationService {
 
     private final RestTemplate restTemplate;
     
-    @Value("${kakao.api.key:your-kakao-api-key}")
+    @Value("${kakao.api.key:}")
     private String kakaoApiKey;
     
     @Value("${kakao.api.origin:localhost}")
@@ -58,6 +58,12 @@ public class KakaoLocationService {
     public List<KakaoPlaceDto> searchPlacesByKeyword(String keyword, BigDecimal latitude, BigDecimal longitude, Integer radius) {
         log.info("Searching places by keyword: {} at ({}, {}) within {}m", 
                 keyword, latitude, longitude, radius);
+        
+        // API 키 유효성 검사
+        if (!isApiKeyValid()) {
+            log.error("❌ 카카오 API 키가 설정되지 않았습니다.");
+            return Collections.emptyList();
+        }
         
         try {
             URI uri = UriComponentsBuilder.fromUriString(KAKAO_API_BASE_URL + "/search/keyword.json")
@@ -97,6 +103,12 @@ public class KakaoLocationService {
     public List<KakaoPlaceDto> searchPlacesByCategory(String categoryCode, BigDecimal latitude, BigDecimal longitude, Integer radius) {
         log.info("Searching places by category: {} at ({}, {}) within {}m", 
                 categoryCode, latitude, longitude, radius);
+        
+        // API 키 유효성 검사
+        if (!isApiKeyValid()) {
+            log.error("❌ 카카오 API 키가 설정되지 않았습니다.");
+            return Collections.emptyList();
+        }
         
         try {
             URI uri = UriComponentsBuilder.fromUriString(KAKAO_API_BASE_URL + "/search/category.json")
@@ -154,6 +166,13 @@ public class KakaoLocationService {
      */
     public CoordinateDto geocodeAddress(String address) {
         log.info("Geocoding address: {}", address);
+        
+        // API 키 유효성 검사 먼저 수행
+        if (!isApiKeyValid()) {
+            log.error("❌ 카카오 API 키가 설정되지 않았거나 유효하지 않습니다. 현재 키: [{}]", 
+                    kakaoApiKey == null ? "null" : (kakaoApiKey.isEmpty() ? "empty" : "***"));
+            throw new BadRequestException("카카오 API 키가 설정되지 않았습니다. 관리자에게 문의하세요.");
+        }
         
         URI uri = null;
         try {
@@ -232,6 +251,13 @@ public class KakaoLocationService {
      */
     public CoordinateDto reverseGeocode(BigDecimal latitude, BigDecimal longitude) {
         log.info("Reverse geocoding coordinates: ({}, {})", latitude, longitude);
+        
+        // API 키 유효성 검사
+        if (!isApiKeyValid()) {
+            log.error("❌ 카카오 API 키가 설정되지 않았거나 유효하지 않습니다. 현재 키: [{}]", 
+                    kakaoApiKey == null ? "null" : (kakaoApiKey.isEmpty() ? "empty" : "***"));
+            throw new BadRequestException("카카오 API 키가 설정되지 않았습니다. 관리자에게 문의하세요.");
+        }
         
         try {
             URI uri = UriComponentsBuilder.fromUriString(KAKAO_API_BASE_URL + "/geo/coord2address.json")
@@ -312,7 +338,10 @@ public class KakaoLocationService {
     @EventListener(ApplicationReadyEvent.class)
     public void testKakaoApiKey() {
         if (!isApiKeyValid()) {
-            log.warn("❌ 카카오 API 키가 설정되지 않았습니다. 외부 장소 검색 기능이 제한됩니다.");
+            log.error("❌ 카카오 API 키가 설정되지 않았습니다!");
+            log.error("   현재 설정값: [{}]", kakaoApiKey == null ? "null" : (kakaoApiKey.isEmpty() ? "empty" : "***"));
+            log.error("   환경변수 KAKAO_API_KEY를 설정하거나 application-prod.yml에서 직접 설정하세요.");
+            log.error("   외부 장소 검색 기능이 제한됩니다.");
             return;
         }
         
