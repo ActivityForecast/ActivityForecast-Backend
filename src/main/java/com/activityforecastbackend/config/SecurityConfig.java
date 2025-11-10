@@ -97,6 +97,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/swagger-ui/swagger-ui-standalone-preset.js").permitAll()
                 .requestMatchers("/api/swagger-ui/swagger-ui.css").permitAll()
                 
+                // 사용자 프로필 및 선호도 API
+                .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")
+                
                 // Admin endpoints
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 
