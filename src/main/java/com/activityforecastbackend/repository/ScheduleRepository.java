@@ -17,39 +17,51 @@ import java.util.Optional;
 public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
 
     List<Schedule> findByIsDeletedFalse();
-    
+
     Optional<Schedule> findByScheduleIdAndIsDeletedFalse(Long scheduleId);
-    
+
     List<Schedule> findByUserAndIsDeletedFalse(User user);
-    
+
     List<Schedule> findByUserAndScheduleDateAndIsDeletedFalse(User user, LocalDate scheduleDate);
-    
+
     List<Schedule> findByUserAndScheduleDateBetweenAndIsDeletedFalse(User user, LocalDate startDate, LocalDate endDate);
-    
+
     List<Schedule> findByCrewAndIsDeletedFalse(Crew crew);
-    
+
     List<Schedule> findByCrewAndScheduleDateAndIsDeletedFalse(Crew crew, LocalDate scheduleDate);
-    
+
     List<Schedule> findByActivityAndIsDeletedFalse(Activity activity);
-    
+
+    // 추가: 크루의 완료된 활동 통계를 계산
+    @Query("SELECT a.activityName, CAST(COUNT(s) AS long) FROM Schedule s JOIN s.activity a " + // ⭐ COUNT 결과를 long으로 명시적 CAST
+            "WHERE s.crew.crewId = :crewId AND s.isDeleted = false " +
+            "AND s.scheduleDate < :currentDate " +
+            "GROUP BY a.activityName " +
+            "ORDER BY COUNT(s) DESC")
+    List<Object[]> findCrewActivityStatistics(
+            @Param("crewId") Long crewId,
+            @Param("currentDate") LocalDate currentDate
+    );
+
+
     @Query("SELECT s FROM Schedule s WHERE s.user = :user AND s.isDeleted = false AND s.crew IS NULL")
     List<Schedule> findPersonalSchedulesByUser(@Param("user") User user);
-    
+
     @Query("SELECT s FROM Schedule s WHERE s.user = :user AND s.isDeleted = false AND s.crew IS NOT NULL")
     List<Schedule> findCrewSchedulesByUser(@Param("user") User user);
-    
+
     @Query("SELECT s FROM Schedule s WHERE s.isDeleted = false AND s.scheduleDate = :date")
     List<Schedule> findByScheduleDate(@Param("date") LocalDate date);
-    
+
     @Query("SELECT s FROM Schedule s WHERE s.user = :user AND s.isDeleted = false AND s.isParticipated = true")
     List<Schedule> findParticipatedSchedulesByUser(@Param("user") User user);
-    
+
     @Query("SELECT s FROM Schedule s WHERE s.user = :user AND s.isDeleted = false AND s.rating IS NOT NULL")
     List<Schedule> findRatedSchedulesByUser(@Param("user") User user);
-    
+
     @Query("SELECT COUNT(s) FROM Schedule s WHERE s.user = :user AND s.isDeleted = false AND s.isParticipated = true AND s.activity = :activity")
     long countParticipatedSchedulesByUserAndActivity(@Param("user") User user, @Param("activity") Activity activity);
-    
+
     @Query("SELECT s.activity, COUNT(s) FROM Schedule s WHERE s.user = :user AND s.isDeleted = false AND s.isParticipated = true GROUP BY s.activity ORDER BY COUNT(s) DESC")
     List<Object[]> findActivityStatisticsByUser(@Param("user") User user);
 }

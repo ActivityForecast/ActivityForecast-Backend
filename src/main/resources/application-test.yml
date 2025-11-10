@@ -2,14 +2,14 @@ spring:
   # Server Configuration (Test)
   server:
     port: 8080
-    
+
   # Database Configuration (Test - H2 In-Memory)
   datasource:
     url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     username: sa
-    password: 
+    password:
     driver-class-name: org.h2.Driver
-    
+
   # JPA/Hibernate Configuration (Test)
   jpa:
     hibernate:
@@ -19,12 +19,12 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.H2Dialect
-        
+
   # H2 Console Configuration (Test)
   h2:
     console:
       enabled: true
-      
+
   # Security Configuration (Test)
   security:
     oauth2:
