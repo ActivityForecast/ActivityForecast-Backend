@@ -2,8 +2,11 @@ package com.activityforecastbackend.controller;
 
 import com.activityforecastbackend.dto.activity.ActivityCategoryDto;
 import com.activityforecastbackend.dto.activity.ActivityDto;
+import com.activityforecastbackend.dto.activity.ActivityLocationDto;
 import com.activityforecastbackend.service.ActivityService;
+import com.activityforecastbackend.service.ActivityLocationService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +23,7 @@ import java.util.List;
 public class ActivityController {
 
     private final ActivityService activityService;
+    private final ActivityLocationService activityLocationService;
 
     @GetMapping
     @Operation(summary = "모든 활동 조회", description = "시스템에 등록된 모든 활동을 조회합니다.")
@@ -54,5 +58,16 @@ public class ActivityController {
         log.info("Request to get activity: {}", activityId);
         ActivityDto activity = activityService.getActivity(activityId);
         return ResponseEntity.ok(activity);
+    }
+
+    @GetMapping("/{activityId}/locations")
+    @Operation(summary = "활동별 장소 조회", description = "특정 활동에 등록된 모든 장소를 조회합니다.")
+    public ResponseEntity<List<ActivityLocationDto>> getLocationsByActivity(
+            @Parameter(description = "활동 ID", required = true, example = "25")
+            @PathVariable Long activityId) {
+        log.info("Request to get locations for activity: {}", activityId);
+        List<ActivityLocationDto> locations = activityLocationService.getLocationsByActivity(activityId);
+        log.info("Retrieved {} locations for activity: {}", locations.size(), activityId);
+        return ResponseEntity.ok(locations);
     }
 }

@@ -79,6 +79,11 @@ air-quality:
   api:
     key: ${AIR_QUALITY_API_KEY:your-air-quality-api-key}
 
+kakao:
+  api:
+    key: ${KAKAO_API_KEY:your-kakao-api-key}
+    origin: ${KAKAO_API_ORIGIN:activityforecast}  # 운영 환경 origin
+
 # CORS Configuration (Production)
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS:https://activityforecast.netlify.app}

@@ -53,9 +53,14 @@ air-quality:
   api:
     key: your-air-quality-api-key
 
+kakao:
+  api:
+    key:   # 카카오 개발자 콘솔에서 REST API 키를 복사해서 붙여넣으세요
+    origin: localhost  # 개발 환경 origin
+
 # CORS Configuration (Development)
 cors:
-  allowed-origins: http://localhost:3000,http://localhost:8080
+  allowed-origins: http://localhost:3000,http://127.0.0.1:3000,http://localhost:8080
 
 # Logging Configuration (Development)
 logging:
