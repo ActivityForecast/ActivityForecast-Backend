@@ -39,7 +39,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final @Lazy OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
     private final @Lazy OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
-    private final KakaoTokenResponseClient kakaoTokenResponseClient;
+    private final @Lazy KakaoTokenResponseClient kakaoTokenResponseClient;
 
     @Value("${cors.allowed-origins:https://activityforecast.netlify.app}")
     private String allowedOrigins;
