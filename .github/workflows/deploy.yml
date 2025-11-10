@@ -113,6 +113,8 @@ jobs:
           AIR_QUALITY_API_KEY=${{ secrets.AIR_QUALITY_API_KEY }}
           KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }}
           KAKAO_CLIENT_SECRET=${{ secrets.KAKAO_CLIENT_SECRET }}
+          KAKAO_API_KEY=${{ secrets.KAKAO_API_KEY }}
+          KAKAO_API_ORIGIN=${{ secrets.KAKAO_API_ORIGIN }}
           CORS_ALLOWED_ORIGINS=${{ secrets.CORS_ALLOWED_ORIGINS }}
           EOF
           
