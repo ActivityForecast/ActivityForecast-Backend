@@ -97,6 +97,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/swagger-ui/swagger-ui-standalone-preset.js").permitAll()
                         .requestMatchers("/api/swagger-ui/swagger-ui.css").permitAll()
 
+                        // 사용자 프로필 및 선호도 API
+                        .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")
+
                         // Admin endpoints
                         .requestMatchers("/admin/**").hasRole("ADMIN")
 
@@ -105,6 +108,20 @@ public class SecurityConfig {
                         .requestMatchers("/recommendation/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/history/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/crew/**").hasAnyRole("USER", "ADMIN")
+
+                        // 크루 API 인증 설정 - USER 또는 ADMIN 권한 필요
+                        .requestMatchers("/api/crews/**").hasAnyRole("USER", "ADMIN")
+
+                        // All other requests need authentication
+                        .anyRequest().authenticated()
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .tokenEndpoint(tokenEndpoint ->
+                                tokenEndpoint.accessTokenResponseClient(kakaoTokenResponseClient)
+                        )
+                        .successHandler(oAuth2AuthenticationSuccessHandler)
+                        .failureHandler(oAuth2AuthenticationFailureHandler)
+                );
 
                         // 크루 API 인증 설정 - USER 또는 ADMIN 권한 필요
                         .requestMatchers("/api/crews/**").hasAnyRole("USER", "ADMIN")
