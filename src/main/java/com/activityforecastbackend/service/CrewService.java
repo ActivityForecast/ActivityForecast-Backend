@@ -45,7 +45,8 @@ public class CrewService {
 
     // 최대 허용 인원 상수를 정의 (50명 초과 금지)
     private static final int GLOBAL_MAX_CAPACITY = 50;
-    // 디폴트 인원 유지
+
+    // 기본값 5명 유지
     private static final int DEFAULT_MAX_CAPACITY = 5;
 
     // 헬퍼 메서드: 리더 권한 확인 (CrewMember.isLeader() 사용)
@@ -347,8 +348,10 @@ public class CrewService {
         if (targetUserId.equals(currentUserId)) {
             // A. 자기 자신 탈퇴 (Leave)
             if (membership.isLeader()) {
-                //크루해제 13번 서비스 호출
+
+                // 리더 탈퇴시 크루해제 로직 호출, 프론트에서 모달로 확인을 완료했다는 전제
                 disbandCrew(crewId, currentUserId);
+                return;
             }
             membership.leaveCrew(); // isActive = false 처리
 
@@ -435,6 +438,7 @@ public class CrewService {
     public void disbandCrew(Long crewId, Long currentUserId) {
         // 1. 리더 권한 확인 및 Crew 엔티티 조회
         Crew crew = checkLeaderAuthority(crewId, currentUserId);
+
 
         // (멤버십이 비활성화되기 전에 호출하여 모든 멤버가 알림을 받을 수 있도록 함)
         notificationService.notifyCrewDisbanded(crew);
