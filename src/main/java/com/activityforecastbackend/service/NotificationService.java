@@ -38,7 +38,7 @@ public class NotificationService {
     }
 
     /**
-     * 크루 가입 완료 알림 (스크린샷: "활동하조 크루에 가입되었습니다.")
+     * 크루 가입 완료 알림 ("활동하조 크루에 가입되었습니다.")
      */
     @Transactional
     public void notifyCrewMemberJoin(Long targetUserId, Crew crew) {
@@ -57,7 +57,7 @@ public class NotificationService {
     }
 
     /**
-     * 일정 생성 알림 (스크린샷: "농구하조 크루에서 10월 20일 일정이 생성되었습니다.")
+     * 일정 생성 알림 ("농구하조 크루에서 10월 20일 일정이 생성되었습니다.")
      */
     @Transactional
     public void notifyScheduleCreated(Long crewId, Schedule schedule, String activityName) {
@@ -93,6 +93,45 @@ public class NotificationService {
         return notifications.stream()
                 .map(NotificationResponse::from)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 크루 해체 알림 ("농구하조 크루가 해체되었습니다.")
+     * 크루의 모든 활성 멤버(리더 포함)에게 알림을 보냅니다.
+     */
+    @Transactional
+    public void notifyCrewDisbanded(Crew crew) {
+        // 1. 크루의 모든 활성 멤버 조회 (리더 포함)
+        List<CrewMember> activeMemberships = crewMemberRepository.findByCrewAndIsActiveTrue(crew);
+
+        // 2. 각 멤버에게 알림 생성 및 푸시
+        for (CrewMember membership : activeMemberships) {
+            User user = membership.getUser();
+
+            Notification notification = Notification.createCrewDisbandedNotification(
+                    user,
+                    crew.getCrewName()
+                    // relatedId는 null 또는 crewId
+            );
+            saveAndSend(notification);
+        }
+    }
+
+    // --- 1.2. 크루 생성 완료 알림 추가 (리더에게만) ---
+    @Transactional
+    public void notifyCrewCreated(Long targetUserId, Crew crew) {
+        User targetUser = userRepository.findById(targetUserId).orElse(null);
+        if (targetUser == null) return;
+
+        // Notification.java의 새로운 팩토리 메서드 호출 (빨간불 해결)
+        Notification notification = Notification.createCrewCreatedNotification(
+                targetUser,
+                crew.getCrewName(),
+                crew.getCrewId()
+        );
+
+        // 알림 저장 및 실시간 푸시
+        saveAndSend(notification);
     }
 
     @Transactional
