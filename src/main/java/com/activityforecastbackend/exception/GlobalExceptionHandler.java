@@ -140,6 +140,27 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(WeatherApiException.class)
+    public ResponseEntity<ErrorResponse> handleWeatherApiException(
+            WeatherApiException ex, WebRequest request) {
+        log.error("Weather API error [{}:{}]: ", ex.getApiType(), ex.getErrorCode(), ex);
+        
+        Map<String, String> additionalInfo = new HashMap<>();
+        additionalInfo.put("apiType", ex.getApiType());
+        additionalInfo.put("errorCode", ex.getErrorCode());
+        
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.SERVICE_UNAVAILABLE.value())
+                .error("Weather Service Unavailable")
+                .message(ex.getMessage())
+                .path(request.getDescription(false).replace("uri=", ""))
+                .validationErrors(additionalInfo)
+                .build();
+        
+        return new ResponseEntity<>(errorResponse, HttpStatus.SERVICE_UNAVAILABLE);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGlobalException(
             Exception ex, WebRequest request) {

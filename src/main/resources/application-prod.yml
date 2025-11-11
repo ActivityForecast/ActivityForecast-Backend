@@ -73,7 +73,7 @@ jwt:
 # External API Configuration (Production)
 weather:
   api:
-    key: ${WEATHER_API_KEY:your-weather-api-key}
+    key: ${WEATHER_API_KEY:}
 
 air-quality:
   api:
