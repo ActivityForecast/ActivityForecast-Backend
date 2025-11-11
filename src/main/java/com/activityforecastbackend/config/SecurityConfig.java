@@ -75,6 +75,7 @@ public class SecurityConfig {
                         .requestMatchers("/health/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/test/**").permitAll()
+                        .requestMatchers("/api/weather/**").permitAll()
 
                         // Swagger endpoints (comprehensive patterns for context path support)
                         .requestMatchers("/swagger-ui/**").permitAll()
