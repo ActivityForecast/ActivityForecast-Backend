@@ -42,7 +42,9 @@ public class CrewService {
     }
 
     // 최대 허용 인원 상수를 정의 (5명 초과 금지)
-    private static final int GLOBAL_MAX_CAPACITY = 5;
+    private static final int GLOBAL_MAX_CAPACITY = 50;
+    // 기본값 5명 유지
+    private static final int DEFAULT_MAX_CAPACITY = 5;
 
     // 헬퍼 메서드: 리더 권한 확인 (CrewMember.isLeader() 사용)
     private Crew checkLeaderAuthority(Long crewId, Long currentUserId) {
@@ -73,7 +75,7 @@ public class CrewService {
 
         // null이거나 1 미만일 경우 기본값 5로 설정
         Integer finalCapacity = (request.getMaxCapacity() == null || request.getMaxCapacity() < 1)
-                ? GLOBAL_MAX_CAPACITY : request.getMaxCapacity();
+                ? DEFAULT_MAX_CAPACITY : request.getMaxCapacity();
 
         User creator = userRepository.findById(currentUserId)
                 .orElseThrow(() -> new NoSuchElementException("유효하지 않은 사용자 ID입니다."));
@@ -333,7 +335,9 @@ public class CrewService {
         if (targetUserId.equals(currentUserId)) {
             // A. 자기 자신 탈퇴 (Leave)
             if (membership.isLeader()) {
-                throw new IllegalStateException("리더는 크루를 탈퇴할 수 없습니다. 크루를 해체하거나 리더 권한을 위임해야 합니다.");
+                // 리더 탈퇴시 크루해제 로직 호출, 프론트에서 모달로 확인을 완료했다는 전제
+                disbandCrew(crewId, currentUserId);
+                return;
             }
             membership.leaveCrew(); // isActive = false 처리
 
@@ -408,5 +412,23 @@ public class CrewService {
         }
 
         return combinedSchedules;
+    }
+
+    // --- 13. 크루 해체 (리더만 가능 - Soft Delete) ---
+    @Transactional
+    public void disbandCrew(Long crewId, Long currentUserId) {
+        // 1. 리더 권한 확인 및 Crew 엔티티 조회
+        Crew crew = checkLeaderAuthority(crewId, currentUserId);
+
+        // 2. 크루를 Soft Delete 처리 (isDeleted = true)
+        crew.softDelete();
+        crewRepository.save(crew);
+
+        // 3. 해당 크루의 모든 멤버십을 비활성화 (isActive = false)
+        List<CrewMember> activeMembers = crewMemberRepository.findByCrewAndIsActiveTrue(crew);
+        for (CrewMember member : activeMembers) {
+            member.leaveCrew(); // isActive = false 처리
+        }
+        crewMemberRepository.saveAll(activeMembers); // 일괄 저장
     }
 }
