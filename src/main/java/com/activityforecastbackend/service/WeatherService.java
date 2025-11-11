@@ -8,6 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -62,6 +64,12 @@ public class WeatherService {
 
             return weatherDto;
 
+        } catch (HttpClientErrorException e) {
+            log.error("날씨 API 클라이언트 오류: {} {}", e.getStatusCode(), e.getStatusText());
+            throw handleHttpClientError(e);
+        } catch (HttpServerErrorException e) {
+            log.error("날씨 API 서버 오류: {} {}", e.getStatusCode(), e.getStatusText());
+            throw WeatherApiException.currentWeatherError("날씨 서비스 서버 오류입니다.");
         } catch (ResourceAccessException e) {
             log.error("날씨 API 연결 실패", e);
             throw WeatherApiException.timeoutError();
@@ -100,6 +108,12 @@ public class WeatherService {
 
             return forecastDto;
 
+        } catch (HttpClientErrorException e) {
+            log.error("예보 API 클라이언트 오류: {} {}", e.getStatusCode(), e.getStatusText());
+            throw handleHttpClientError(e);
+        } catch (HttpServerErrorException e) {
+            log.error("예보 API 서버 오류: {} {}", e.getStatusCode(), e.getStatusText());
+            throw WeatherApiException.forecastError("예보 서비스 서버 오류입니다.");
         } catch (ResourceAccessException e) {
             log.error("예보 API 연결 실패", e);
             throw WeatherApiException.timeoutError();
@@ -138,6 +152,12 @@ public class WeatherService {
 
             return airQualityDto;
 
+        } catch (HttpClientErrorException e) {
+            log.error("대기질 API 클라이언트 오류: {} {}", e.getStatusCode(), e.getStatusText());
+            throw handleHttpClientError(e);
+        } catch (HttpServerErrorException e) {
+            log.error("대기질 API 서버 오류: {} {}", e.getStatusCode(), e.getStatusText());
+            throw WeatherApiException.airQualityError("대기질 서비스 서버 오류입니다.");
         } catch (ResourceAccessException e) {
             log.error("대기질 API 연결 실패", e);
             throw WeatherApiException.timeoutError();
@@ -252,6 +272,21 @@ public class WeatherService {
         } catch (WeatherApiException e) {
             log.warn("활동별 쾌적도 점수 계산 실패: {}", e.getMessage());
             return 0.5;
+        }
+    }
+
+    private WeatherApiException handleHttpClientError(HttpClientErrorException e) {
+        switch (e.getStatusCode().value()) {
+            case 401:
+                return WeatherApiException.apiKeyError();
+            case 429:
+                return WeatherApiException.rateLimitError();
+            case 404:
+                return WeatherApiException.invalidLocationError(0, 0);
+            case 400:
+                return new WeatherApiException("WEATHER_API", "BAD_REQUEST", "잘못된 요청 파라미터입니다.");
+            default:
+                return new WeatherApiException("WEATHER_API", "CLIENT_ERROR", "날씨 API 클라이언트 오류: " + e.getStatusText());
         }
     }
 }
