@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.activityforecastbackend.security.UserPrincipal;
+import org.springframework.security.core.annotation.AuthenticationPrincipal; // JWT로
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -33,7 +35,8 @@ public class CrewController {
     @PostMapping
     public ResponseEntity<CrewResponse> createCrew( // CrewResponse로 변경
                                                     @RequestBody CrewCreationRequest request,
-                                                    @RequestHeader("X-User-Id") Long currentUserId) {
+                                                    @AuthenticationPrincipal UserPrincipal currentUser) {
+        Long currentUserId = currentUser.getId();
         CrewResponse newCrew = crewService.createCrew(request, currentUserId);
         return new ResponseEntity<>(newCrew, HttpStatus.CREATED);
     }
@@ -44,8 +47,9 @@ public class CrewController {
             // 반환 타입 변경
             @PathVariable Long crewId,
             @RequestBody ScheduleCreationRequest request,
-            @RequestHeader("X-User-Id") Long currentUserId) {
+            @AuthenticationPrincipal UserPrincipal currentUser) {
 
+        Long currentUserId = currentUser.getId();
         CrewSchedule newSchedule = crewService.createCrewSchedule(crewId, request, currentUserId);
         // DTO로 변환하여 반환
         return new ResponseEntity<>(CrewScheduleResponse.from(newSchedule), HttpStatus.CREATED);
@@ -56,7 +60,9 @@ public class CrewController {
     public ResponseEntity<Void> deleteSchedule(
             @PathVariable Long crewId,
             @PathVariable Long crewScheduleId,
-            @RequestHeader("X-User-Id") Long currentUserId) {
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+
+        Long currentUserId = currentUser.getId();
         crewService.deleteCrewSchedule(crewId, crewScheduleId, currentUserId);
         return ResponseEntity.noContent().build();
     }
@@ -66,7 +72,9 @@ public class CrewController {
     public ResponseEntity<CrewMemberResponse> inviteMember(
             @PathVariable Long crewId,
             @RequestBody MemberInvitationRequest request,
-            @RequestHeader("X-User-Id") Long currentUserId) {
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+
+        Long currentUserId = currentUser.getId();
         CrewMember newMember = crewService.inviteMember(crewId, request, currentUserId);
         return new ResponseEntity<>(CrewMemberResponse.from(newMember), HttpStatus.CREATED);
     }
@@ -106,7 +114,9 @@ public class CrewController {
     // 8. GET /api/crews (사용자별 크루 목록 조회)
     @GetMapping
     public ResponseEntity<List<CrewResponse>> getAllCrews(
-                                                           @RequestHeader("X-User-Id") Long currentUserId) {
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+
+        Long currentUserId = currentUser.getId();
         List<CrewResponse> crews = crewService.getCrewsByUserId(currentUserId);
         return ResponseEntity.ok(crews);
     }
@@ -116,8 +126,9 @@ public class CrewController {
     public ResponseEntity<Void> removeMember(
             @PathVariable Long crewId,
             @PathVariable Long targetUserId,
-            @RequestHeader("X-User-Id") Long currentUserId) {
+            @AuthenticationPrincipal UserPrincipal currentUser) {
 
+        Long currentUserId = currentUser.getId();
         crewService.leaveOrRemoveMember(crewId, targetUserId, currentUserId);
         return ResponseEntity.noContent().build();
     }
@@ -126,8 +137,9 @@ public class CrewController {
     @PostMapping("/join")
     public ResponseEntity<CrewMemberResponse> joinCrewByLink(
             @RequestBody CrewJoinRequest request,
-            @RequestHeader("X-User-Id") Long currentUserId) {
+            @AuthenticationPrincipal UserPrincipal currentUser) {
 
+        Long currentUserId = currentUser.getId();
         CrewMember newMembership = crewService.joinCrewByInviteCode(request.getInviteCode(), currentUserId);
         //DTO로 변경
         return new ResponseEntity<>(CrewMemberResponse.from(newMembership), HttpStatus.CREATED);
@@ -137,11 +149,12 @@ public class CrewController {
     // 기존 /{crewId}/schedules와 구별하기 위해 PathVariable 없이 정의
     @GetMapping("/schedules")
     public ResponseEntity<List<CrewScheduleResponse>> getCombinedMonthlySchedules(
-            // 인증 헤더에서 사용자 ID를 받습니다.
-            @RequestHeader("X-User-Id") Long currentUserId,
+
+            @AuthenticationPrincipal UserPrincipal currentUser,
             @RequestParam int year,
             @RequestParam int month) {
 
+        Long currentUserId = currentUser.getId();
         List<CrewScheduleResponse> schedules = crewService.getCombinedMonthlySchedulesForUser(currentUserId, year, month);
 
         return ResponseEntity.ok(schedules);
