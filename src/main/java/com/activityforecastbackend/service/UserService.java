@@ -81,6 +81,7 @@ public class UserService {
         validatePreferences(request.getPreferences());
         
         userPreferenceRepository.deleteByUser(user);
+        userPreferenceRepository.flush(); // 삭제를 즉시 DB에 반영
         
         List<UserPreference> newPreferences = request.getPreferences().stream()
                 .map(item -> {
