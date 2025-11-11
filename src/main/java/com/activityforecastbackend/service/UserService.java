@@ -18,8 +18,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -80,7 +78,7 @@ public class UserService {
         Long userId = getCurrentUserId();
         User user = findUserById(userId);
         
-        validatePreferenceWeights(request.getPreferences());
+        validatePreferences(request.getPreferences());
         
         userPreferenceRepository.deleteByUser(user);
         
@@ -89,7 +87,7 @@ public class UserService {
                     Activity activity = activityRepository.findById(item.getActivityId())
                             .orElseThrow(() -> new ResourceNotFoundException("활동을 찾을 수 없습니다: " + item.getActivityId()));
                     
-                    return UserPreference.createPreference(user, activity, item.getWeight());
+                    return UserPreference.createPreference(user, activity);
                 })
                 .collect(Collectors.toList());
         
@@ -120,16 +118,10 @@ public class UserService {
                     String categoryName = entry.getKey().getCategoryName();
                     List<UserPreference> categoryPrefs = entry.getValue();
                     int activityCount = categoryPrefs.size();
-                    double averageWeight = categoryPrefs.stream()
-                            .mapToDouble(p -> p.getWeight().doubleValue())
-                            .average()
-                            .orElse(0.0);
                     
                     return PreferenceStatisticsResponse.CategoryStatistic.builder()
                             .categoryName(categoryName)
                             .activityCount(activityCount)
-                            .averageWeight(BigDecimal.valueOf(averageWeight)
-                                    .setScale(2, RoundingMode.HALF_UP).doubleValue())
                             .build();
                 })
                 .collect(Collectors.toList());
@@ -175,17 +167,13 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("사용자를 찾을 수 없습니다: " + userId));
     }
     
-    private void validatePreferenceWeights(List<PreferenceUpdateRequest.PreferenceItem> preferences) {
-        BigDecimal totalWeight = preferences.stream()
-                .map(PreferenceUpdateRequest.PreferenceItem::getWeight)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        
-        if (totalWeight.compareTo(BigDecimal.ONE) > 0) {
-            throw new BadRequestException("선호도 가중치의 총합은 1.0을 초과할 수 없습니다. 현재: " + totalWeight);
+    private void validatePreferences(List<PreferenceUpdateRequest.PreferenceItem> preferences) {
+        if (preferences.size() < 2) {
+            throw new BadRequestException("선호 활동은 최소 2개 이상 설정해야 합니다");
         }
         
-        if (preferences.size() > 20) {
-            throw new BadRequestException("선호 활동은 최대 20개까지 설정할 수 있습니다");
+        if (preferences.size() > 8) {
+            throw new BadRequestException("선호 활동은 최대 8개까지 설정할 수 있습니다");
         }
         
         List<Long> activityIds = preferences.stream()

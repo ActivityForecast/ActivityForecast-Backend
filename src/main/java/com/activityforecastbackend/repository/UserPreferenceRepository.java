@@ -16,6 +16,8 @@ public interface UserPreferenceRepository extends JpaRepository<UserPreference, 
 
     List<UserPreference> findByUser(User user);
     
+    List<UserPreference> findByUserUserId(Long userId);
+    
     List<UserPreference> findByActivity(Activity activity);
     
     Optional<UserPreference> findByUserAndActivity(User user, Activity activity);
@@ -32,12 +34,10 @@ public interface UserPreferenceRepository extends JpaRepository<UserPreference, 
     @Query("SELECT COUNT(up) FROM UserPreference up WHERE up.activity = :activity")
     long countUsersByActivity(@Param("activity") Activity activity);
     
-    @Query("SELECT AVG(up.weight) FROM UserPreference up WHERE up.user = :user")
-    Double findAverageWeightByUser(@Param("user") User user);
     
     @Query("SELECT COUNT(up) FROM UserPreference up WHERE up.user = :user")
     long countPreferencesByUser(@Param("user") User user);
     
-    @Query("SELECT up FROM UserPreference up JOIN FETCH up.activity a JOIN FETCH a.category WHERE up.user = :user ORDER BY up.weight DESC")
+    @Query("SELECT up FROM UserPreference up JOIN FETCH up.activity a JOIN FETCH a.category WHERE up.user = :user ORDER BY up.createdAt DESC")
     List<UserPreference> findByUserWithActivityAndCategory(@Param("user") User user);
 }
