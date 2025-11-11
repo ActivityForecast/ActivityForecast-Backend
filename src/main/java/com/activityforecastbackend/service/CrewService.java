@@ -34,6 +34,8 @@ public class CrewService {
 
     private final EntityManager em; // EntityManager 주입
 
+    private final NotificationService notificationService; //알림
+
     // 사용자 정의 예외
     public static class UnauthorizedException extends RuntimeException {
         public UnauthorizedException(String message) {
@@ -99,6 +101,9 @@ public class CrewService {
         Crew updatedCrew = crewRepository.findByIdWithMembers(savedCrew.getCrewId())
                 .orElseThrow(() -> new NoSuchElementException("생성된 크루를 찾을 수 없습니다."));
 
+        // 알림 호출: 리더 자신에게 가입 알림 발송
+        notificationService.notifyCrewMemberJoin(currentUserId, updatedCrew);
+
         return CrewResponse.from(updatedCrew);
     }
 
@@ -155,6 +160,10 @@ public class CrewService {
                 true // isConfirmed = true
         );
         participantRepository.save(leaderParticipant);
+
+        //알림 기능 추가
+        String activityName = activity.getActivityName(); // 미리 로드한 activity 객체에서 이름 사용
+        notificationService.notifyScheduleCreated(crewId, newSchedule, activityName);
 
         return newCrewSchedule;
     }
@@ -381,7 +390,12 @@ public class CrewService {
 
         // 5. 멤버로 추가 (일반 멤버 권한)
         CrewMember newMember = CrewMember.createMember(crew, user, CrewRole.MEMBER);
-        return crewMemberRepository.save(newMember);
+        CrewMember newMembership = crewMemberRepository.save(newMember); // 저장 후 반환 객체 사용
+
+        //가입한 사용자(currentUserId)와 가입한 크루(crew) 정보를 전달, 알림기능
+        notificationService.notifyCrewMemberJoin(currentUserId, crew);
+
+        return newMembership;
     }
 
     // --- 12. 사용자 전체 크루 월별 일정 조회 ---

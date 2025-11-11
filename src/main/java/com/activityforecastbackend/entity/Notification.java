@@ -82,6 +82,18 @@ public class Notification {
         return notification;
     }
 
+    //가입 완료 알람 추가
+    public static Notification createCrewMemberJoinNotification(User user, String crewName, Long crewId) {
+        Notification notification = new Notification();
+        notification.setUser(user);
+        notification.setNotificationType(NotificationType.CREW_MEMBER_JOIN);
+        notification.setTitle("크루 가입");
+        notification.setContent(crewName + " 크루에 가입되었습니다.");
+        notification.setRelatedId(crewId);
+        notification.setRelatedType(RelatedType.CREW);
+        return notification;
+    }
+
     public static Notification createScheduleReminderNotification(User user, String activityName, Long scheduleId) {
         Notification notification = new Notification();
         notification.setUser(user);
