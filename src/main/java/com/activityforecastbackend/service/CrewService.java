@@ -34,6 +34,8 @@ public class CrewService {
 
     private final EntityManager em; // EntityManager 주입
 
+    private final NotificationService notificationService; //알림
+
     // 사용자 정의 예외
     public static class UnauthorizedException extends RuntimeException {
         public UnauthorizedException(String message) {
@@ -41,8 +43,9 @@ public class CrewService {
         }
     }
 
-    // 최대 허용 인원 상수를 정의 (5명 초과 금지)
+    // 최대 허용 인원 상수를 정의 (50명 초과 금지)
     private static final int GLOBAL_MAX_CAPACITY = 50;
+
     // 기본값 5명 유지
     private static final int DEFAULT_MAX_CAPACITY = 5;
 
@@ -101,6 +104,12 @@ public class CrewService {
         Crew updatedCrew = crewRepository.findByIdWithMembers(savedCrew.getCrewId())
                 .orElseThrow(() -> new NoSuchElementException("생성된 크루를 찾을 수 없습니다."));
 
+        //크루 생성 알림 추가
+        notificationService.notifyCrewCreated(currentUserId, updatedCrew);
+
+        // 알림 호출: 리더 자신에게 가입 알림 발송
+        notificationService.notifyCrewMemberJoin(currentUserId, updatedCrew);
+
         return CrewResponse.from(updatedCrew);
     }
 
@@ -115,12 +124,6 @@ public class CrewService {
         Activity activity = activityRepository.findById(request.getActivityId())
                 .orElseThrow(() -> new NoSuchElementException("활동을 찾을 수 없습니다. ID: " + request.getActivityId()));
 
-        // 장소 엔티티 조회
-        ActivityLocation location = null;
-        if (request.getLocationId() != null) {
-            location = activityLocationRepository.findById(request.getLocationId())
-                    .orElseThrow(() -> new NoSuchElementException("장소를 찾을 수 없습니다. ID: " + request.getLocationId()));
-        }
 
         // 3. Schedule 엔티티 생성
         Schedule newSchedule = Schedule.createCrewSchedule(
@@ -130,16 +133,15 @@ public class CrewService {
                 request.getDate(),
                 request.getTime());
 
-        // Schedule 엔티티에 위치 정보 설정
-        if (location != null) {
-            newSchedule.setLocation(location);
-        } else if (request.getLocationAddress() != null) {
-            // 사용자 지정 위치 정보 설정 (Schedule 엔티티의 setCustomLocation 메서드를 사용한다고 가정)
+
+        // 사용자 지정 위치 정보 설정 (사용자 입력 값만 사용)
+        if (request.getLocationAddress() != null) {
             newSchedule.setCustomLocation(
                     request.getLocationLatitude(),
                     request.getLocationLongitude(),
                     request.getLocationAddress());
         }
+
 
         newSchedule = scheduleRepository.save(newSchedule);
 
@@ -157,6 +159,10 @@ public class CrewService {
                 true // isConfirmed = true
         );
         participantRepository.save(leaderParticipant);
+
+        //알림 기능 추가
+        String activityName = activity.getActivityName(); // 미리 로드한 activity 객체에서 이름 사용
+        notificationService.notifyScheduleCreated(crewId, newSchedule, activityName);
 
         return newCrewSchedule;
     }
@@ -335,6 +341,7 @@ public class CrewService {
         if (targetUserId.equals(currentUserId)) {
             // A. 자기 자신 탈퇴 (Leave)
             if (membership.isLeader()) {
+
                 // 리더 탈퇴시 크루해제 로직 호출, 프론트에서 모달로 확인을 완료했다는 전제
                 disbandCrew(crewId, currentUserId);
                 return;
@@ -385,7 +392,12 @@ public class CrewService {
 
         // 5. 멤버로 추가 (일반 멤버 권한)
         CrewMember newMember = CrewMember.createMember(crew, user, CrewRole.MEMBER);
-        return crewMemberRepository.save(newMember);
+        CrewMember newMembership = crewMemberRepository.save(newMember); // 저장 후 반환 객체 사용
+
+        //가입한 사용자(currentUserId)와 가입한 크루(crew) 정보를 전달, 알림기능
+        notificationService.notifyCrewMemberJoin(currentUserId, crew);
+
+        return newMembership;
     }
 
     // --- 12. 사용자 전체 크루 월별 일정 조회 ---
@@ -419,6 +431,10 @@ public class CrewService {
     public void disbandCrew(Long crewId, Long currentUserId) {
         // 1. 리더 권한 확인 및 Crew 엔티티 조회
         Crew crew = checkLeaderAuthority(crewId, currentUserId);
+
+
+        // (멤버십이 비활성화되기 전에 호출하여 모든 멤버가 알림을 받을 수 있도록 함)
+        notificationService.notifyCrewDisbanded(crew);
 
         // 2. 크루를 Soft Delete 처리 (isDeleted = true)
         crew.softDelete();

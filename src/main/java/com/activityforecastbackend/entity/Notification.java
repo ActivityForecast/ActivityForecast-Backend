@@ -60,7 +60,9 @@ public class Notification {
         ACTIVITY_RECOMMENDATION,
         CREW_MEMBER_JOIN,
         CREW_SCHEDULE_UPDATE,
-        RATING_REQUEST
+        RATING_REQUEST,
+        CREW_DISBANDED,
+        CREW_CREATED
     }
 
     public enum RelatedType {
@@ -77,6 +79,43 @@ public class Notification {
         notification.setNotificationType(NotificationType.CREW_INVITE);
         notification.setTitle("크루 초대");
         notification.setContent(crewName + " 크루에 초대되었습니다.");
+        notification.setRelatedId(crewId);
+        notification.setRelatedType(RelatedType.CREW);
+        return notification;
+    }
+
+    //가입 완료 알람 추가
+    public static Notification createCrewMemberJoinNotification(User user, String crewName, Long crewId) {
+        Notification notification = new Notification();
+        notification.setUser(user);
+        notification.setNotificationType(NotificationType.CREW_MEMBER_JOIN);
+        notification.setTitle("크루 가입");
+        notification.setContent(crewName + " 크루에 가입되었습니다.");
+        notification.setRelatedId(crewId);
+        notification.setRelatedType(RelatedType.CREW);
+        return notification;
+    }
+
+
+    // [크루 이름] 크루해체, 크루해제 추가
+    public static Notification createCrewDisbandedNotification(User user, String crewName) {
+        Notification notification = new Notification();
+        notification.setUser(user);
+        notification.setNotificationType(NotificationType.CREW_DISBANDED);
+        notification.setTitle(String.format("[%s] 크루 해체", crewName));
+        notification.setContent("크루가 해체되어 활동이 종료되었습니다.");
+        notification.setRelatedId(null);
+        notification.setRelatedType(RelatedType.CREW);
+        return notification;
+    }
+
+    // 크루 생성 추가
+    public static Notification createCrewCreatedNotification(User user, String crewName, Long crewId) {
+        Notification notification = new Notification();
+        notification.setUser(user);
+        notification.setNotificationType(NotificationType.CREW_CREATED);
+        notification.setTitle(String.format("[%s] 생성 완료", crewName));
+        notification.setContent("새로운 크루 생성을 축하합니다! 이제 멤버를 초대하거나 일정을 만들어보세요.");
         notification.setRelatedId(crewId);
         notification.setRelatedType(RelatedType.CREW);
         return notification;
@@ -114,6 +153,8 @@ public class Notification {
         notification.setRelatedType(RelatedType.ACTIVITY);
         return notification;
     }
+
+
 
     public void markAsRead() {
         this.isRead = true;
