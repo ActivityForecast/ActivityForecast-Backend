@@ -3,7 +3,7 @@ spring:
     name: ActivityForecast-Backend
   
   profiles:
-    active: dev
+    active: prod
   
   # Common configuration for all profiles
   jpa:
