@@ -25,16 +25,13 @@ public class CrewScheduleResponse {
     private int totalParticipantCount;
     private int confirmedParticipantCount;
 
-    // 장소 정보 추가
-    private Long locationId;
+    // 장소 정보 추가, location id 제거
     private String locationAddress;
     private BigDecimal locationLatitude;
     private BigDecimal locationLongitude;
 
     public static CrewScheduleResponse from(CrewSchedule cs) {
         Schedule schedule = cs.getSchedule();
-
-        Long locId = (schedule.getLocation() != null) ? schedule.getLocation().getLocationId() : null;
 
         return CrewScheduleResponse.builder()
                 .crewScheduleId(cs.getCrewScheduleId())
@@ -43,8 +40,6 @@ public class CrewScheduleResponse {
                 .equipmentList(cs.getEquipmentList())
                 // Schedule 엔티티의 날짜를 가져와 사용 (순환 참조 차단)
                 .scheduleDate(cs.getSchedule().getScheduleDate().atTime(cs.getSchedule().getScheduleTime()))
-                // 장소 정보 추가
-                .locationId(locId)
                 // Schedule 엔티티에서 최종 위치 정보를 가져옵니다.
                 .locationAddress(schedule.getLocationAddress())
                 .locationLatitude(schedule.getLocationLatitude())

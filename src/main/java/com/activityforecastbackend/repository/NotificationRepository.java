@@ -31,7 +31,13 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     void markAllAsReadByUserId(@Param("userId") Long userId);
 
     //읽지 않은 알람 (알람 빨간불 표시용)
-    boolean existsByUserIdAndIsReadFalse(Long userId);
+    @Query("SELECT CASE WHEN COUNT(n) > 0 THEN TRUE ELSE FALSE END FROM Notification n WHERE n.user.userId = :userId AND n.isRead = FALSE")
+    boolean existsByUserIdAndIsReadFalse(@Param("userId") Long userId);
+
+    // 특정 알림 ID로 알림을 삭제
+    @Modifying
+    @Query("DELETE FROM Notification n WHERE n.notificationId = :notificationId AND n.user.userId = :userId")
+    void deleteByNotificationIdAndUserId(@Param("notificationId") Long notificationId, @Param("userId") Long userId);
     
     @Query("SELECT n FROM Notification n WHERE n.user = :user AND n.createdAt >= :since ORDER BY n.createdAt DESC")
     List<Notification> findRecentNotificationsByUser(@Param("user") User user, @Param("since") LocalDateTime since);

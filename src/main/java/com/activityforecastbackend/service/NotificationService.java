@@ -37,15 +37,14 @@ public class NotificationService {
         sseNotificationService.sendNotification(notification.getUser().getUserId(), response);
     }
 
-    /**
-     * 크루 가입 완료 알림 ("활동하조 크루에 가입되었습니다.")
-     */
+
+    // 크루 가입 완료 알림, (예,"활동하조 크루에 가입되었습니다.")
     @Transactional
     public void notifyCrewMemberJoin(Long targetUserId, Crew crew) {
         User targetUser = userRepository.findById(targetUserId).orElse(null);
         if (targetUser == null) return;
 
-        //핵심 수정: 임시 로직을 제거하고, 엔티티의 팩토리 메서드를 사용하여 알림 객체를 생성합니다.
+        // 임시 로직을 제거 , 엔티티의 팩토리 메서드를 사용하여 알림 객체를 생성합니다.
         Notification notification = Notification.createCrewMemberJoinNotification(
                 targetUser,
                 crew.getCrewName(),
@@ -56,9 +55,8 @@ public class NotificationService {
         saveAndSend(notification);
     }
 
-    /**
-     * 일정 생성 알림 ("농구하조 크루에서 10월 20일 일정이 생성되었습니다.")
-     */
+
+    // 일정 생성 알림 (예, "농구하조 크루에서 10월 20일 일정이 생성되었습니다.")
     @Transactional
     public void notifyScheduleCreated(Long crewId, Schedule schedule, String activityName) {
         // 1. 크루의 모든 활성 멤버 조회
@@ -95,10 +93,9 @@ public class NotificationService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * 크루 해체 알림 ("농구하조 크루가 해체되었습니다.")
-     * 크루의 모든 활성 멤버(리더 포함)에게 알림을 보냅니다.
-     */
+
+    // 크루 해제 알림 (예,"농구하조 크루가 해체되었습니다.")
+    //크루의 모든 활성 멤버(리더 포함)에게 알림
     @Transactional
     public void notifyCrewDisbanded(Crew crew) {
         // 1. 크루의 모든 활성 멤버 조회 (리더 포함)
@@ -132,6 +129,18 @@ public class NotificationService {
 
         // 알림 저장 및 실시간 푸시
         saveAndSend(notification);
+    }
+
+
+    // 특정 알림 ID로 알림을 삭제, notificationId 삭제할 알림의 ID,
+    // userId 현재 요청을 보낸 사용자의 ID
+    @Transactional
+    public void deleteNotification(Long notificationId, Long userId) {
+        //  알림이 해당 사용자의 것인지 검증하며 삭제를 시도
+
+        // Repository에 구현된 deleteByNotificationIdAndUserId 호출
+        notificationRepository.deleteByNotificationIdAndUserId(notificationId, userId);
+
     }
 
     @Transactional

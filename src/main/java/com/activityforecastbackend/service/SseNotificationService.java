@@ -18,7 +18,7 @@ public class SseNotificationService {
     private static final Long DEFAULT_TIMEOUT = 10 * 60 * 1000L;
     private final Map<Long, SseEmitter> emitters = new ConcurrentHashMap<>();
 
-    /** 1. 클라이언트와 연결을 생성하고 SseEmitter를 맵에 등록 */
+    // 1. 클라이언트와 연결을 생성하고 SseEmitter를 맵에 등록
     public SseEmitter subscribe(Long userId) {
         SseEmitter emitter = new SseEmitter(DEFAULT_TIMEOUT);
         emitters.put(userId, emitter);
@@ -40,7 +40,7 @@ public class SseNotificationService {
         return emitter;
     }
 
-    /** 2. 특정 사용자에게 알림 데이터를 실시간으로 전송 */
+    // 2. 특정 사용자에게 알림 데이터를 실시간으로 전송
     public void sendNotification(Long userId, NotificationResponse notification) {
         SseEmitter emitter = emitters.get(userId);
 
