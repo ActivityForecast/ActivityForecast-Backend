@@ -22,6 +22,5 @@ public class PreferenceStatisticsResponse {
     public static class CategoryStatistic {
         private String categoryName;
         private int activityCount;
-        private double averageWeight;
     }
 }
