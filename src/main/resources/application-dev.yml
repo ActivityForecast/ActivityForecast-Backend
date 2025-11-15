@@ -21,6 +21,17 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  
+  # Flyway Configuration (Development)
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+  # Jackson Configuration (Development)
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
 
   # Security Configuration (Development)
   security:
@@ -57,6 +68,14 @@ kakao:
   api:
     key:   # 카카오 개발자 콘솔에서 REST API 키를 복사해서 붙여넣으세요
     origin: localhost  # 개발 환경 origin
+
+# AI Model Server Configuration (Development)
+ai:
+  server:
+    url: http://134.185.108.251:8000
+    timeout:
+      connection: 5000  # 5초
+      read: 10000      # 10초
 
 # CORS Configuration (Development)
 cors:
