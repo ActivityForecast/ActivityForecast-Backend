@@ -38,6 +38,11 @@ spring:
         order_updates: true
         batch_versioned_data: true
 
+  # Jackson Configuration (Production)
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
   # Security Configuration (Production)
   security:
     oauth2:
@@ -61,10 +66,6 @@ app:
   oauth2:
     authorized-redirect-uri: ${OAUTH2_AUTHORIZED_REDIRECT_URI:https://activityforecast.netlify.app/auth/oauth2/redirect}
 
-  # Jackson Configuration (Production)
-  jackson:
-    serialization:
-      write-dates-as-timestamps: false
 
 # JWT Configuration (Production)
 jwt:
@@ -83,6 +84,14 @@ kakao:
   api:
     key: ${KAKAO_API_KEY:}  # 환경변수에서 로드, 기본값 없음 (보안 강화)
     origin: ${KAKAO_API_ORIGIN:144.24.73.5}  # 운영 환경 origin
+
+# AI Model Server Configuration (Production)
+ai:
+  server:
+    url: ${AI_SERVER_URL:http://134.185.108.251:8000}
+    timeout:
+      connection: ${AI_CONNECTION_TIMEOUT:10000}  # 10초
+      read: ${AI_READ_TIMEOUT:30000}              # 30초
 
 # CORS Configuration (Production)
 cors:
