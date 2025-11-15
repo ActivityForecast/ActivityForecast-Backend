@@ -161,6 +161,36 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.SERVICE_UNAVAILABLE);
     }
 
+    @ExceptionHandler(AiModelException.class)
+    public ResponseEntity<ErrorResponse> handleAiModelException(
+            AiModelException ex, WebRequest request) {
+        log.error("AI Model error [{}:{}]: ", ex.getErrorType(), ex.getErrorCode(), ex);
+        
+        Map<String, String> additionalInfo = new HashMap<>();
+        additionalInfo.put("errorType", ex.getErrorType());
+        additionalInfo.put("errorCode", ex.getErrorCode());
+        
+        // 에러 코드에 따른 HTTP 상태 코드 결정
+        HttpStatus status = switch (ex.getErrorCode()) {
+            case "CONNECTION_ERROR", "TIMEOUT" -> HttpStatus.SERVICE_UNAVAILABLE;
+            case "INVALID_RESPONSE", "LOCATION_ERROR" -> HttpStatus.BAD_REQUEST;
+            case "INSUFFICIENT_DATA" -> HttpStatus.UNPROCESSABLE_ENTITY;
+            case "RECOMMENDATION_FAILED", "SERVER_ERROR" -> HttpStatus.INTERNAL_SERVER_ERROR;
+            default -> HttpStatus.SERVICE_UNAVAILABLE;
+        };
+        
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(status.value())
+                .error("AI Recommendation Service Error")
+                .message(ex.getMessage())
+                .path(request.getDescription(false).replace("uri=", ""))
+                .validationErrors(additionalInfo)
+                .build();
+        
+        return new ResponseEntity<>(errorResponse, status);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGlobalException(
             Exception ex, WebRequest request) {
