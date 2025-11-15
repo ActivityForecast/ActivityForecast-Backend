@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 
@@ -207,17 +208,26 @@ public class WeatherDto {
 
     public LocalDateTime getDateTime() {
         if (timestamp == null) return null;
-        return LocalDateTime.ofInstant(Instant.ofEpochSecond(timestamp), ZoneId.systemDefault());
+        
+        // OpenWeatherMap timezone 필드 활용 (UTC 오프셋을 초 단위로 제공)
+        ZoneOffset zoneOffset = ZoneOffset.ofTotalSeconds(timezone != null ? timezone : 0);
+        return LocalDateTime.ofInstant(Instant.ofEpochSecond(timestamp), zoneOffset);
     }
 
     public LocalDateTime getSunrise() {
         if (sys == null || sys.getSunrise() == null) return null;
-        return LocalDateTime.ofInstant(Instant.ofEpochSecond(sys.getSunrise()), ZoneId.systemDefault());
+        
+        // OpenWeatherMap timezone 필드 활용
+        ZoneOffset zoneOffset = ZoneOffset.ofTotalSeconds(timezone != null ? timezone : 0);
+        return LocalDateTime.ofInstant(Instant.ofEpochSecond(sys.getSunrise()), zoneOffset);
     }
 
     public LocalDateTime getSunset() {
         if (sys == null || sys.getSunset() == null) return null;
-        return LocalDateTime.ofInstant(Instant.ofEpochSecond(sys.getSunset()), ZoneId.systemDefault());
+        
+        // OpenWeatherMap timezone 필드 활용
+        ZoneOffset zoneOffset = ZoneOffset.ofTotalSeconds(timezone != null ? timezone : 0);
+        return LocalDateTime.ofInstant(Instant.ofEpochSecond(sys.getSunset()), zoneOffset);
     }
 
     public BigDecimal getComfortScore() {
