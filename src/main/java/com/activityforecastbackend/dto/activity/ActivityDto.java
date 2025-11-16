@@ -65,7 +65,9 @@ public class ActivityDto {
                 .activityType(activity.getActivityType())
                 .description(activity.getDescription())
                 .difficultyLevel(activity.getDifficultyLevel())
-                .locationType(activity.getLocationType().name())
+                //.locationType(activity.getLocationType().name())
+                // locationType null일때 null 반환하게 수정
+                .locationType(activity.getLocationType() != null ? activity.getLocationType().name() : null)
                 .equipmentNeeded(activity.getEquipmentNeeded())
                 .precautions(activity.getPrecautions())
                 .imageUrl(activity.getImageUrl())
