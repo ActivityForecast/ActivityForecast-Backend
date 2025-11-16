@@ -23,9 +23,18 @@ public interface CrewScheduleRepository extends JpaRepository<CrewSchedule, Long
     
     @Query("SELECT cs FROM CrewSchedule cs WHERE cs.crew = :crew AND cs.schedule.scheduleDate = :date AND cs.schedule.isDeleted = false")
     List<CrewSchedule> findByCrewAndScheduleDate(@Param("crew") Crew crew, @Param("date") LocalDate date);
-    
-    @Query("SELECT cs FROM CrewSchedule cs WHERE cs.crew = :crew AND cs.schedule.scheduleDate BETWEEN :startDate AND :endDate AND cs.schedule.isDeleted = false")
-    List<CrewSchedule> findByCrewAndScheduleDateBetween(@Param("crew") Crew crew, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT DISTINCT cs FROM CrewSchedule cs " +
+            "JOIN FETCH cs.schedule s " +         // CrewSchedule의 Schedule을 fetch join
+            "JOIN FETCH s.activity a " +          // Schedule의 Activity를 fetch join
+            "WHERE cs.crew = :crew " +
+            "AND s.scheduleDate BETWEEN :startDate AND :endDate " +
+            "AND s.isDeleted = false")
+    List<CrewSchedule> findByCrewAndScheduleDateBetween(
+            @Param("crew") Crew crew,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
     
     @Query("SELECT COUNT(cs) FROM CrewSchedule cs WHERE cs.crew = :crew AND cs.schedule.isDeleted = false")
     long countByCrewAndScheduleIsDeletedFalse(@Param("crew") Crew crew);

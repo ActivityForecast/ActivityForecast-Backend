@@ -1,5 +1,6 @@
 package com.activityforecastbackend.dto;
 
+import com.activityforecastbackend.entity.Activity;
 import com.activityforecastbackend.entity.CrewSchedule;
 import com.activityforecastbackend.entity.Schedule;
 import lombok.Builder;
@@ -30,8 +31,13 @@ public class CrewScheduleResponse {
     private BigDecimal locationLatitude;
     private BigDecimal locationLongitude;
 
+    //활동명 추가
+    private Long activityId;
+
     public static CrewScheduleResponse from(CrewSchedule cs) {
         Schedule schedule = cs.getSchedule();
+
+        Activity activity = schedule.getActivity();
 
         return CrewScheduleResponse.builder()
                 .crewScheduleId(cs.getCrewScheduleId())
@@ -46,6 +52,9 @@ public class CrewScheduleResponse {
                 .locationLongitude(schedule.getLocationLongitude())
                 .totalParticipantCount(cs.getTotalParticipantCount())
                 .confirmedParticipantCount(cs.getConfirmedParticipantCount())
+
+                // activity가 null이 아닐 경우 ID와 이름 설정
+                .activityId(activity != null ? activity.getActivityId() : null)
                 .build();
     }
 }
