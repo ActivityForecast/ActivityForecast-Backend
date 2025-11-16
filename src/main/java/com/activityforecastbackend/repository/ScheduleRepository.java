@@ -64,4 +64,31 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
 
     @Query("SELECT s.activity, COUNT(s) FROM Schedule s WHERE s.user = :user AND s.isDeleted = false AND s.isParticipated = true GROUP BY s.activity ORDER BY COUNT(s) DESC")
     List<Object[]> findActivityStatisticsByUser(@Param("user") User user);
+
+    //히스토리용 추가 쿼리 3개--------------------------------------
+
+    @Query("SELECT s FROM Schedule s " +
+            "WHERE s.user = :user AND s.scheduleDate BETWEEN :start AND :end " +
+            "  AND s.isDeleted = false " +
+            "ORDER BY s.scheduleDate DESC, s.scheduleTime DESC")
+    List<Schedule> findSchedulesForHistoryTimeline( // 1. 월별 타임라인 조회용
+                                                    @Param("user") User user,
+                                                    @Param("start") LocalDate start,
+                                                    @Param("end") LocalDate end
+    );
+
+    @Query("SELECT a.activityName, COUNT(s) " +
+            "FROM Schedule s JOIN s.activity a " +
+            "WHERE s.user = :user AND s.scheduleDate BETWEEN :start AND :end " +
+            "  AND s.isParticipated = true AND s.isDeleted = false " +
+            "GROUP BY a.activityName")
+    List<Object[]> countCompletedActivitiesByNameForUserAndPeriod( // 2. 월별 통계 (활동별 횟수)
+                                                                   @Param("user") User user,
+                                                                   @Param("start") LocalDate start,
+                                                                   @Param("end") LocalDate end
+    );
+
+    long countByUserAndScheduleDateBetweenAndIsParticipatedTrueAndIsDeletedFalse( // 3. 월별 통계 (총 횟수)
+                                                                                  User user, LocalDate start, LocalDate end
+    );
 }
