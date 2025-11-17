@@ -107,9 +107,6 @@ public class CrewService {
         //크루 생성 알림 추가
         notificationService.notifyCrewCreated(currentUserId, updatedCrew);
 
-        // 알림 호출: 리더 자신에게 가입 알림 발송
-        notificationService.notifyCrewMemberJoin(currentUserId, updatedCrew);
-
         return CrewResponse.from(updatedCrew);
     }
 
@@ -181,9 +178,14 @@ public class CrewService {
             throw new UnauthorizedException("해당 크루의 일정이 아닙니다.");
         }
 
+        // 3. 삭제 전 알림 전송을 위해 정보 미리 추출
         Schedule scheduleToDelete = crewSchedule.getSchedule();
+        String activityName = scheduleToDelete.getActivity().getActivityName();
 
-        // 3. 삭제
+        // 4. 일정 삭제 알림 전송 (삭제 실행 전 알림부터 전송)
+        notificationService.notifyScheduleDeleted(crewSchedule, activityName);
+
+        // 5. 삭제
         scheduleToDelete.softDelete(); // Schedule soft delete
         crewScheduleRepository.delete(crewSchedule);
     }
@@ -488,7 +490,11 @@ public class CrewService {
         // 6. CrewSchedule 엔티티 업데이트 (장비 목록)
         crewSchedule.setEquipmentList(request.getEquipmentList());
 
-        // 7. DTO로 변환하여 반환
+        // 7. 일정 수정 알림
+        String activityName = activity.getActivityName();
+        notificationService.notifyScheduleUpdated(crewSchedule, activityName);
+
+        // 8. DTO로 변환하여 반환
         return CrewScheduleResponse.from(crewSchedule);
     }
 }
