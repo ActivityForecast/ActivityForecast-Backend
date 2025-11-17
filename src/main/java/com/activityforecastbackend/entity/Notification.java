@@ -62,7 +62,8 @@ public class Notification {
         CREW_SCHEDULE_UPDATE,
         RATING_REQUEST,
         CREW_DISBANDED,
-        CREW_CREATED
+        CREW_CREATED,
+        CREW_SCHEDULE_DELETE  //추가
     }
 
     public enum RelatedType {
@@ -96,6 +97,29 @@ public class Notification {
         return notification;
     }
 
+    // 크루 일정 수정
+    public static Notification createCrewScheduleUpdateNotification(User user, String crewName, String activityName, Long crewScheduleId) {
+        Notification notification = new Notification();
+        notification.setUser(user);
+        notification.setNotificationType(NotificationType.CREW_SCHEDULE_UPDATE);
+        notification.setTitle("크루 일정 수정");
+        notification.setContent(String.format("[%s] 크루의 %s 일정이 변경되었습니다.", crewName, activityName));
+        notification.setRelatedId(crewScheduleId);
+        notification.setRelatedType(RelatedType.CREW_SCHEDULE);
+        return notification;
+    }
+
+    // 크루 일정 삭제
+    public static Notification createCrewScheduleDeleteNotification(User user, String crewName, String activityName, Long crewId) {
+        Notification notification = new Notification();
+        notification.setUser(user);
+        notification.setNotificationType(NotificationType.CREW_SCHEDULE_DELETE);
+        notification.setTitle("크루 일정 삭제");
+        notification.setContent(String.format("[%s] 크루의 %s 일정이 취소되었습니다.", crewName, activityName));
+        notification.setRelatedId(crewId);
+        notification.setRelatedType(RelatedType.CREW);
+        return notification;
+    }
 
     // [크루 이름] 크루해체, 크루해제 추가
     public static Notification createCrewDisbandedNotification(User user, String crewName) {

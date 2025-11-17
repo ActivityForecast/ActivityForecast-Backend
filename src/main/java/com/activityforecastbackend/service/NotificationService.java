@@ -1,11 +1,7 @@
 package com.activityforecastbackend.service;
 
 import com.activityforecastbackend.dto.notification.NotificationResponse;
-import com.activityforecastbackend.entity.Crew;
-import com.activityforecastbackend.entity.CrewMember;
-import com.activityforecastbackend.entity.Notification;
-import com.activityforecastbackend.entity.Schedule;
-import com.activityforecastbackend.entity.User;
+import com.activityforecastbackend.entity.*;
 import com.activityforecastbackend.repository.CrewMemberRepository;
 import com.activityforecastbackend.repository.NotificationRepository;
 import com.activityforecastbackend.repository.UserRepository;
@@ -129,6 +125,48 @@ public class NotificationService {
 
         // 알림 저장 및 실시간 푸시
         saveAndSend(notification);
+    }
+
+    //일정 수정 추가
+    @Transactional
+    public void notifyScheduleUpdated(CrewSchedule crewSchedule, String activityName) {
+        Crew crew = crewSchedule.getCrew();
+        // 1. 크루의 모든 활성 멤버 조회
+        List<CrewMember> activeMemberships = crewMemberRepository.findByCrewAndIsActiveTrue(crew);
+
+        // 2. 각 멤버에게 알림 생성 및 푸시
+        for (CrewMember membership : activeMemberships) {
+            User user = membership.getUser();
+
+            Notification notification = Notification.createCrewScheduleUpdateNotification(
+                    user,
+                    crew.getCrewName(),
+                    activityName,
+                    crewSchedule.getCrewScheduleId() // 수정된 일정 ID
+            );
+            saveAndSend(notification); // 저장 및 SSE 전송
+        }
+    }
+
+    //일정 삭제 추가
+    @Transactional
+    public void notifyScheduleDeleted(CrewSchedule crewSchedule, String activityName) {
+        Crew crew = crewSchedule.getCrew();
+        // 1. 크루의 모든 활성 멤버 조회
+        List<CrewMember> activeMemberships = crewMemberRepository.findByCrewAndIsActiveTrue(crew);
+
+        // 2. 각 멤버에게 알림 생성 및 푸시
+        for (CrewMember membership : activeMemberships) {
+            User user = membership.getUser();
+
+            Notification notification = Notification.createCrewScheduleDeleteNotification(
+                    user,
+                    crew.getCrewName(),
+                    activityName,
+                    crew.getCrewId() // 일정 대신 크루 ID
+            );
+            saveAndSend(notification); // 저장 및 SSE 전송
+        }
     }
 
 
