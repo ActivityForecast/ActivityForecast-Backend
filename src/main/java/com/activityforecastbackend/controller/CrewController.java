@@ -159,4 +159,18 @@ public class CrewController {
 
         return ResponseEntity.ok(schedules);
     }
+
+    // 12. 크루 일정 수정 (PUT /api/crews/{crewId}/schedules/{crewScheduleId}) - 리더 권한 필요
+    @PutMapping("/{crewId}/schedules/{crewScheduleId}")
+    public ResponseEntity<CrewScheduleResponse> updateSchedule(
+            @PathVariable Long crewId,
+            @PathVariable Long crewScheduleId,
+            @RequestBody ScheduleCreationRequest request, // 생성 DTO 재사용
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+
+        Long currentUserId = currentUser.getId();
+        // 서비스의 updateCrewSchedule 호출
+        CrewScheduleResponse updatedSchedule = crewService.updateCrewSchedule(crewId, crewScheduleId, request, currentUserId);
+        return ResponseEntity.ok(updatedSchedule); // 200 OK
+    }
 }

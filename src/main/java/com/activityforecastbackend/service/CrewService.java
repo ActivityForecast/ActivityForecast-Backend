@@ -447,4 +447,48 @@ public class CrewService {
         }
         crewMemberRepository.saveAll(activeMembers); // 일괄 저장
     }
+
+    // --- 14. 크루 일정 수정 (리더만 가능) ---
+    @Transactional
+    public CrewScheduleResponse updateCrewSchedule(Long crewId, Long crewScheduleId, ScheduleCreationRequest request, Long currentUserId) {
+        // 1. 권한 확인 (리더인지)
+        checkLeaderAuthority(crewId, currentUserId);
+
+        // 2. CrewSchedule 조회 및 Crew 소속 확인
+        CrewSchedule crewSchedule = crewScheduleRepository.findById(crewScheduleId)
+                .orElseThrow(() -> new NoSuchElementException("크루 일정을 찾을 수 없습니다. ID: " + crewScheduleId));
+
+        if (!Objects.equals(crewSchedule.getCrew().getCrewId(), crewId)) {
+            throw new UnauthorizedException("해당 크루의 일정이 아닙니다.");
+        }
+
+        // 3. 연관된 Schedule 엔티티 조회 (isDeleted = false 인 것)
+        Schedule schedule = crewSchedule.getSchedule();
+        if (schedule == null || schedule.getIsDeleted()) {
+            // 방어코드
+            throw new NoSuchElementException("수정할 원본 일정을 찾을 수 없습니다.");
+        }
+
+        // 4. Activity 엔티티 재조회 (DB 오류방지 코드)
+        Activity activity = activityRepository.findById(request.getActivityId())
+                .orElseThrow(() -> new NoSuchElementException("활동을 찾을 수 없습니다. ID: " + request.getActivityId()));
+
+        // 5. Schedule 엔티티 업데이트 (날짜, 시간, 활동, 위치)
+        schedule.setActivity(activity);
+        schedule.setScheduleDate(request.getDate());
+        schedule.setScheduleTime(request.getTime());
+
+        // 사용자 지정 위치 정보 업데이트 (create와 동일한 로직)
+        schedule.setCustomLocation(
+                request.getLocationLatitude(),
+                request.getLocationLongitude(),
+                request.getLocationAddress());
+
+
+        // 6. CrewSchedule 엔티티 업데이트 (장비 목록)
+        crewSchedule.setEquipmentList(request.getEquipmentList());
+
+        // 7. DTO로 변환하여 반환
+        return CrewScheduleResponse.from(crewSchedule);
+    }
 }
