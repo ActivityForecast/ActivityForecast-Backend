@@ -1,6 +1,6 @@
 package com.activityforecastbackend.controller;
 
-import com.activityforecastbackend.dto.*;
+import com.activityforecastbackend.dto.crew.*;
 import com.activityforecastbackend.entity.CrewMember;
 import com.activityforecastbackend.entity.CrewSchedule;
 import com.activityforecastbackend.service.CrewService;
@@ -106,8 +106,8 @@ public class CrewController {
 
     // 7. GET /api/crews/{crewId}/statistics (크루 활동 통계 조회 API)
     @GetMapping("/{crewId}/statistics")
-    public ResponseEntity<ActivityStatisticsDto> getCrewStatistics(@PathVariable Long crewId) {
-        ActivityStatisticsDto stats = crewService.getCrewActivityStatistics(crewId);
+    public ResponseEntity<ActivityStatisticsResponse> getCrewStatistics(@PathVariable Long crewId) {
+        ActivityStatisticsResponse stats = crewService.getCrewActivityStatistics(crewId);
         return ResponseEntity.ok(stats);
     }
 

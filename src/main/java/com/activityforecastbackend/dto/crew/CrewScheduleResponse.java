@@ -1,4 +1,4 @@
-package com.activityforecastbackend.dto;
+package com.activityforecastbackend.dto.crew;
 
 import com.activityforecastbackend.entity.Activity;
 import com.activityforecastbackend.entity.CrewSchedule;

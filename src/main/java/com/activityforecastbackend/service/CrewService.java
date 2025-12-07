@@ -1,6 +1,6 @@
 package com.activityforecastbackend.service;
 
-import com.activityforecastbackend.dto.*;
+import com.activityforecastbackend.dto.crew.*;
 import com.activityforecastbackend.entity.*;
 import com.activityforecastbackend.entity.CrewMember.CrewRole;
 import com.activityforecastbackend.repository.*;
@@ -244,7 +244,7 @@ public class CrewService {
 
     // --- 7. 크루 활동 통계 계산 (파이 차트 데이터 생성) ---
     @Transactional(readOnly = true)
-    public ActivityStatisticsDto getCrewActivityStatistics(Long crewId) {
+    public ActivityStatisticsResponse getCrewActivityStatistics(Long crewId) {
         Crew crew = crewRepository.findByCrewIdAndIsDeletedFalse(crewId)
                 .orElseThrow(() -> new NoSuchElementException("크루 ID를 찾을 수 없습니다: " + crewId));
 
@@ -285,7 +285,7 @@ public class CrewService {
             combinedStats.put(activityName, count);
         }
 
-        Map<String, ActivityStatisticsDto.ActivityStat> detailedStats = new java.util.HashMap<>();
+        Map<String, ActivityStatisticsResponse.ActivityStat> detailedStats = new java.util.HashMap<>();
 
         for (Map.Entry<String, Long> entry : combinedStats.entrySet()) {
             String activityName = entry.getKey();
@@ -296,14 +296,14 @@ public class CrewService {
                 percentage = (double) count * 100.0 / totalActivityCount;
             }
 
-            detailedStats.put(activityName, ActivityStatisticsDto.ActivityStat.builder()
+            detailedStats.put(activityName, ActivityStatisticsResponse.ActivityStat.builder()
                     .activityName(activityName)
                     .count(count)
                     .percentage(percentage)
                     .build());
         }
 
-        return ActivityStatisticsDto.builder()
+        return ActivityStatisticsResponse.builder()
                 .totalActivityCount(totalActivityCount)
                 .activityDetails(detailedStats)
                 .build();

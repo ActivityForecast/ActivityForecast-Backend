@@ -1,4 +1,4 @@
-package com.activityforecastbackend.dto;
+package com.activityforecastbackend.dto.crew;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -6,7 +6,7 @@ import java.util.Map;
 
 @Getter
 @Builder
-public class ActivityStatisticsDto {
+public class ActivityStatisticsResponse {
 
     // 크루에서 활동 통계표시용 DTO
     private long totalActivityCount; // 총 활동 횟수
